@@ -1,0 +1,5 @@
+{
+  "name": "NetViz Pro",
+  "description": "A professional network topology visualizer. Upload JSON datasets to visualize routers, links, and interface metrics using interactive D3 force-directed graphs.",
+  "requestFramePermissions": []
+}
