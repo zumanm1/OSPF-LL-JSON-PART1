@@ -11,17 +11,19 @@ const buildAdjacencyList = (nodes: NetworkNode[], links: NetworkLink[]): Adjacen
   links.forEach((link, index) => {
     const sourceId = typeof link.source === 'object' ? (link.source as NetworkNode).id : link.source as string;
     const targetId = typeof link.target === 'object' ? (link.target as NetworkNode).id : link.target as string;
-    const cost = link.cost || 1;
+
+    // Use forward_cost for forward direction, fallback to legacy cost for backward compatibility
+    const forwardCost = link.forward_cost !== undefined ? link.forward_cost : (link.cost || 1);
+    const reverseCost = link.reverse_cost !== undefined ? link.reverse_cost : forwardCost;
 
     // Add Forward Edge
     if (adj.has(sourceId)) {
-      adj.get(sourceId)?.push({ target: targetId, cost: link.cost, linkIndex: index });
+      adj.get(sourceId)?.push({ target: targetId, cost: forwardCost, linkIndex: index });
     }
 
-    // Add Reverse Edge (Assuming physical links are bidirectional for reachability)
+    // Add Reverse Edge (with correct reverse cost for asymmetric routing)
     if (adj.has(targetId)) {
-       const revCost = link.reverse_cost !== undefined ? link.reverse_cost : link.cost;
-       adj.get(targetId)?.push({ target: sourceId, cost: revCost, linkIndex: index });
+       adj.get(targetId)?.push({ target: sourceId, cost: reverseCost, linkIndex: index });
     }
   });
 

@@ -5,25 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>NetViz Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
     <style>
-      /* Custom scrollbar for webkit */
+      /* Custom scrollbar for webkit - Theme Aware */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
-      ::-webkit-scrollbar-track {
-        background: #1f2937; 
+      /* Dark mode scrollbar */
+      .dark ::-webkit-scrollbar-track,
+      html.dark ::-webkit-scrollbar-track {
+        background: #1f2937;
       }
-      ::-webkit-scrollbar-thumb {
-        background: #4b5563; 
+      .dark ::-webkit-scrollbar-thumb,
+      html.dark ::-webkit-scrollbar-thumb {
+        background: #4b5563;
         border-radius: 4px;
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #6b7280; 
+      .dark ::-webkit-scrollbar-thumb:hover,
+      html.dark ::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
       }
-      body {
-        background-color: #111827; /* gray-900 */
+      /* Light mode scrollbar */
+      .light ::-webkit-scrollbar-track,
+      html.light ::-webkit-scrollbar-track {
+        background: #e5e7eb;
+      }
+      .light ::-webkit-scrollbar-thumb,
+      html.light ::-webkit-scrollbar-thumb {
+        background: #9ca3af;
+        border-radius: 4px;
+      }
+      .light ::-webkit-scrollbar-thumb:hover,
+      html.light ::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+      }
+      /* Base body styles - Theme Responsive */
+      html.dark body {
+        background-color: #030712; /* gray-950 */
         color: #e5e7eb; /* gray-200 */
+      }
+      html.light body {
+        background-color: #f9fafb; /* gray-50 */
+        color: #111827; /* gray-900 */
+      }
+      /* Smooth transition */
+      body {
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
     </style>
   <script type="importmap">

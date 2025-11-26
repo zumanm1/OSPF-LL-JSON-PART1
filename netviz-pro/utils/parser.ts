@@ -135,38 +135,48 @@ export const parsePyATSData = (rawData: any): NetworkData => {
                // Check if this link (or its reverse) is already recorded
                const existingLinkIndex = links.findIndex(l => {
                     // Exact match (Source -> Target)
-                    if (l.source === sourceId && l.target === targetId && l.source_interface === rawLocalInt) return true;
+                    if (l.source === sourceId && l.target === targetId && 
+                        normalizeInterfaceName(l.source_interface) === localInt) return true;
                     // Reverse match (Target -> Source)
-                    if (l.source === targetId && l.target === sourceId && l.target_interface === rawLocalInt) return true;
+                    if (l.source === targetId && l.target === sourceId && 
+                        normalizeInterfaceName(l.target_interface) === localInt) return true;
                     return false;
                });
 
                if (existingLinkIndex === -1) {
-                   // New Link
+                   // New Link - create with forward_cost and reverse_cost
                    links.push({
                        source: sourceId,
                        target: targetId,
                        source_interface: rawLocalInt,
                        target_interface: rawRemoteInt,
-                       cost: cost,
+                       forward_cost: cost,
+                       reverse_cost: cost, // Default to symmetric until we see reverse direction
+                       cost: cost, // Legacy field for backward compatibility
                        original_cost: cost,
+                       original_forward_cost: cost,
+                       original_reverse_cost: cost,
                        status: 'up'
                    });
 
-                    // Update neighbor stats
-                    const sNode = nodesMap.get(sourceId);
-                    if(sNode) sNode.neighbor_count = (sNode.neighbor_count || 0) + 1;
-                    const tNode = nodesMap.get(targetId);
-                    if(tNode) tNode.neighbor_count = (tNode.neighbor_count || 0) + 1;
+                   // Update neighbor stats
+                   const sNode = nodesMap.get(sourceId);
+                   if(sNode) sNode.neighbor_count = (sNode.neighbor_count || 0) + 1;
+                   const tNode = nodesMap.get(targetId);
+                   if(tNode) tNode.neighbor_count = (tNode.neighbor_count || 0) + 1;
                } else {
-                   // Link exists - check if we need to update reverse cost
-                   const link = links[existingLinkIndex];
-                   // If we found the reverse direction (we are at 'sourceId' looking at 'targetId', but link is 'targetId' -> 'sourceId')
-                   if (link.source === targetId && link.target === sourceId) {
-                       if (link.reverse_cost === undefined) {
-                           link.reverse_cost = cost;
-                       }
+                   // Link already exists - this is the reverse direction
+                   const existingLink = links[existingLinkIndex];
+                   
+                   // If existing link is Target->Source, we're seeing Source->Target now
+                   if (existingLink.source === targetId && existingLink.target === sourceId) {
+                       // Update the reverse cost of the existing link with our forward cost
+                       existingLink.reverse_cost = cost;
+                       existingLink.original_reverse_cost = cost;
+                       // Keep legacy cost field as forward cost
+                       existingLink.cost = existingLink.forward_cost;
                    }
+                   // If existing link is Source->Target (exact duplicate), skip it
                }
            }
         });

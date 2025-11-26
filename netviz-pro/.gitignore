@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Screenshots and test output (large binary files)
+*_screenshots/
+*.png
+
+# Test input files
+input-*.json
+*-topology-*.json
+
+# Temporary test files
+*.cjs

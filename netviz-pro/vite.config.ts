@@ -7,13 +7,13 @@ export default defineConfig(({ mode }) => {
     return {
       server: {
         port: 9040,
-        strictPort: false, // Allows fallback to 9041 if 9040 is taken
+        strictPort: true, // Only use port 9040, fail if taken
         host: '0.0.0.0',
       },
       plugins: [react()],
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.API_KEY': JSON.stringify(env.FOR_SEARCH_API_FUTURE),
+        'process.env.FOR_SEARCH_API_FUTURE': JSON.stringify(env.FOR_SEARCH_API_FUTURE)
       },
       resolve: {
         alias: {

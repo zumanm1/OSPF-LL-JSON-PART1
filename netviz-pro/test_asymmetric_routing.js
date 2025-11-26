@@ -19,9 +19,7 @@ import puppeteer from 'puppeteer';
   const page = await browser.newPage();
 
   page.on('console', msg => {
-    if (msg.text().includes('ERROR') || msg.text().includes('Warning')) {
-      console.log('PAGE LOG:', msg.text());
-    }
+    console.log('PAGE LOG:', msg.text());
   });
 
   const findByText = async (selector, text) => {
@@ -116,30 +114,67 @@ import puppeteer from 'puppeteer';
     const analysisTab = await findByText('button', 'Analysis');
     if (analysisTab) {
       await analysisTab.click();
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 1000)); // Wait longer for tab switch
     }
+
+    // Take screenshot to see what's actually visible
+    await page.screenshot({ path: 'analysis_tab.png', fullPage: true });
+    console.log('Screenshot saved to analysis_tab.png');
+
+    // Debug: Check what select elements are actually available
+    const allSelects = await page.evaluate(() => {
+      const selects = Array.from(document.querySelectorAll('select'));
+      return selects.map((select, index) => ({
+        index,
+        value: select.value,
+        options: Array.from(select.options).map(opt => opt.value),
+        parentText: select.parentElement?.textContent?.substring(0, 100)
+      }));
+    });
+    console.log('All select elements:', JSON.stringify(allSelects, null, 2));
 
     // 6. Select source and destination countries
     console.log('6. Configuring path analysis (ZIM -> USA)...');
+    
+    // Use the correct select indices based on the debug output
     const selects = await page.$$('select');
-    if (selects.length >= 4) {
-      // Source country
-      await selects[0].click();
-      await selects[0].select('ZIM');
-      await new Promise(r => setTimeout(r, 300));
+    console.log('Found', selects.length, 'select elements');
+    
+    if (selects.length >= 5) {
+      // Index 1 = Source country, Index 3 = Destination country
+      console.log('Setting source country to ZIM...');
+      await selects[1].click();
+      await selects[1].select('ZIM');
+      await new Promise(r => setTimeout(r, 500));
 
-      // Destination country
-      await selects[2].click();
-      await selects[2].select('USA');
-      await new Promise(r => setTimeout(r, 300));
+      console.log('Setting destination country to USA...');
+      await selects[3].click();
+      await selects[3].select('USA');
+      await new Promise(r => setTimeout(r, 500));
+    } else {
+      console.log('ERROR: Not enough select elements found');
     }
 
     // 7. Calculate paths
     console.log('7. Calculating all paths...');
+    
+    // First, let's see what buttons are available on the Analysis tab
+    const allButtons = await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      return buttons.map(btn => btn.textContent?.trim()).filter(text => text);
+    });
+    console.log('Available buttons:', allButtons);
+    
     const findPathBtn = await findByText('button', 'Find All');
+    console.log('Find All button found:', !!findPathBtn);
     if (findPathBtn) {
+      const buttonText = await page.evaluate(btn => btn.textContent, findPathBtn);
+      console.log('Button text:', buttonText);
       await findPathBtn.click();
-      await new Promise(r => setTimeout(r, 2000)); // Wait for calculation
+      console.log('Button clicked, waiting for calculation...');
+      await new Promise(r => setTimeout(r, 3000)); // Wait longer for calculation
+    } else {
+      console.log('ERROR: Find All button not found!');
     }
 
     // 8. Check if paths were found
@@ -178,7 +213,78 @@ import puppeteer from 'puppeteer';
     }
 
     // 9. Test reverse direction (USA -> ZIM)
-    console.log('8. Testing reverse direction (USA -> ZIM)...');
+    console.log('// 8. Test specific asymmetric link (R1 -> R4)')
+    console.log('8. Testing specific asymmetric link (R1 -> R4)...');
+    
+    // Select specific nodes instead of countries to force using the asymmetric link
+    const nodeSelects = await page.$$('select');
+    if (nodeSelects.length >= 5) {
+      // Index 2 = Source node, Index 4 = Destination node
+      console.log('Setting source node to R1...');
+      await nodeSelects[1].click(); // Source country first
+      await nodeSelects[1].select('ZIM');
+      await new Promise(r => setTimeout(r, 300));
+      
+      await nodeSelects[2].click(); // Source node
+      await nodeSelects[2].select('R1');
+      await new Promise(r => setTimeout(r, 300));
+
+      console.log('Setting destination node to R4...');
+      await nodeSelects[3].click(); // Dest country first  
+      await nodeSelects[3].select('ZIM');
+      await new Promise(r => setTimeout(r, 300));
+      
+      await nodeSelects[4].click(); // Dest node
+      await nodeSelects[4].select('R4');
+      await new Promise(r => setTimeout(r, 300));
+
+      // Test forward direction
+      console.log('Testing forward direction R1 -> R4...');
+      await findPathBtn.click();
+      await new Promise(r => setTimeout(r, 2000));
+
+      const forwardCost = await page.evaluate(() => {
+        const costElements = document.querySelectorAll('div.p-3.rounded.border.cursor-pointer');
+        if (costElements.length > 0) {
+          const text = costElements[0].textContent;
+          const match = text.match(/(\d+)/);
+          return match ? parseInt(match[1]) : null;
+        }
+        return null;
+      });
+
+      // Test reverse direction
+      console.log('Testing reverse direction R4 -> R1...');
+      await nodeSelects[2].click();
+      await nodeSelects[2].select('R4');
+      await nodeSelects[4].click(); 
+      await nodeSelects[4].select('R1');
+      await new Promise(r => setTimeout(r, 300));
+
+      await findPathBtn.click();
+      await new Promise(r => setTimeout(r, 2000));
+
+      const reverseCost = await page.evaluate(() => {
+        const costElements = document.querySelectorAll('div.p-3.rounded.border.cursor-pointer');
+        if (costElements.length > 0) {
+          const text = costElements[0].textContent;
+          const match = text.match(/(\d+)/);
+          return match ? parseInt(match[1]) : null;
+        }
+        return null;
+      });
+
+      console.log(`   ✓ Forward path cost (R1 -> R4): ${forwardCost}`);
+      console.log(`   ✓ Reverse path cost (R4 -> R1): ${reverseCost}`);
+      
+      if (forwardCost === 10 && reverseCost === 10000) {
+        console.log('   ✓ ASYMMETRIC ROUTING VALIDATED: Forward=10, Reverse=10000');
+      } else {
+        console.log(`   ⚠ Expected Forward=10, Reverse=10000. Got Forward=${forwardCost}, Reverse=${reverseCost}`);
+      }
+    }
+
+    // 9. Testing reverse direction (USA -> ZIM)...');
     const selects2 = await page.$$('select');
     if (selects2.length >= 4) {
       await selects2[0].select('USA');
