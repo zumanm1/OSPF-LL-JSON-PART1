@@ -456,15 +456,26 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                         </td>
                         <td className={`px-4 py-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                           {editingUserId === user.id ? (
-                            <input
-                              type="number"
-                              value={editForm.maxUses}
-                              onChange={(e) => setEditForm({ ...editForm, maxUses: parseInt(e.target.value) || 0 })}
-                              className={`w-20 px-2 py-1 rounded border ${
-                                isDark ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300 text-gray-900'
-                              }`}
-                              min={0}
-                            />
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                value={editForm.maxUses}
+                                onChange={(e) => setEditForm({ ...editForm, maxUses: parseInt(e.target.value) || 0 })}
+                                className={`w-20 px-2 py-1 rounded border ${
+                                  isDark ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300 text-gray-900'
+                                }`}
+                                min={0}
+                              />
+                              <label className="flex items-center gap-1 cursor-pointer text-xs">
+                                <input
+                                  type="checkbox"
+                                  checked={editForm.expiryEnabled}
+                                  onChange={(e) => setEditForm({ ...editForm, expiryEnabled: e.target.checked })}
+                                  className="w-3 h-3 text-emerald-600 rounded"
+                                />
+                                <span>Expiry</span>
+                              </label>
+                            </div>
                           ) : (
                             user.expiry_enabled
                               ? `${user.current_uses} / ${user.max_uses}`

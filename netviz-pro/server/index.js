@@ -210,13 +210,18 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
+  // Admin or expiry disabled = unlimited uses (-1)
+  const usesRemaining = (user.role === 'admin' || !user.expiry_enabled)
+    ? -1
+    : Math.max(0, user.max_uses - user.current_uses);
+
   res.json({
     id: user.id,
     username: user.username,
     role: user.role,
     maxUses: user.max_uses,
     currentUses: user.current_uses,
-    usesRemaining: Math.max(0, user.max_uses - user.current_uses),
+    usesRemaining,
     expiryEnabled: user.expiry_enabled === 1,
     isExpired: user.is_expired === 1,
     lastLogin: user.last_login

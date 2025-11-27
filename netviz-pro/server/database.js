@@ -214,6 +214,12 @@ export const checkExpiry = (userId) => {
 };
 
 export const recordLogin = (userId, ipAddress, success = true) => {
+  // Skip recording if userId is null (failed login with unknown user)
+  if (userId === null || userId === undefined) {
+    console.log(`[DB] Login attempt from ${ipAddress}: ${success ? 'success' : 'failed (unknown user)'}`);
+    return;
+  }
+
   db.prepare(`
     INSERT INTO login_history (user_id, ip_address, success) VALUES (?, ?, ?)
   `).run(userId, ipAddress, success ? 1 : 0);
