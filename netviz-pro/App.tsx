@@ -24,12 +24,14 @@ import UserStatusBar from './components/UserStatusBar';
 import AdminPanel from './components/AdminPanel';
 import ChangePasswordModal from './components/ChangePasswordModal';
 import DeviceManager from './components/DeviceManager';
-import { NetworkData, NetworkNode, PathResult, NetworkLink } from './types';
+import HostnameMappingPanel from './components/HostnameMappingPanel';
+import { NetworkData, NetworkNode, PathResult, NetworkLink, HostnameMappingConfig } from './types';
 import { EMPTY_NETWORK_DATA, COUNTRY_COLORS } from './constants';
 import { Layout, Github, Share2, Activity, Network, Eye, EyeOff, CheckSquare, Square, Zap, AlertTriangle, Download, Trash2, GitCompare, TrendingUp, Globe, FlaskConical, Grid3X3, Route, Lightbulb, Waves, HeartPulse, HardDrive, BarChart3, GitBranch, Sun, Moon, FileDown, Server } from 'lucide-react';
 import { useLocalStorage, clearLocalStorageKeys } from './hooks/useLocalStorage';
 import { useTheme } from './context/ThemeContext';
 import { useAuth } from './context/AuthContext';
+import { applyHostnameMappings, DEFAULT_HOSTNAME_MAPPINGS } from './utils/hostnameMapper';
 import { exportAllToSingleFile, ExportColumn } from './utils/exportUtils';
 import { findAllPaths } from './utils/graphAlgorithms';
 
@@ -50,6 +52,34 @@ const App: React.FC = () => {
     STORAGE_KEYS.ORIGINAL_DATA,
     EMPTY_NETWORK_DATA as NetworkData
   );
+
+  // Hostname Mapping Config - PERSISTED
+  const [hostnameMappingConfig, setHostnameMappingConfig] = useLocalStorage<HostnameMappingConfig>(
+    'netviz_hostname_mapping',
+    DEFAULT_HOSTNAME_MAPPINGS
+  );
+
+  // Effect: Re-apply hostname mappings when config changes
+  useEffect(() => {
+    if (originalData.nodes.length === 0) return;
+
+    setOriginalData(prevData => {
+      const updatedNodes = applyHostnameMappings(prevData.nodes, hostnameMappingConfig);
+      
+      // Only update if something actually changed to avoid infinite loops
+      const hasChanges = updatedNodes.some((node, i) => 
+        node.hostname !== prevData.nodes[i].hostname || 
+        node.role !== prevData.nodes[i].role
+      );
+
+      if (!hasChanges) return prevData;
+
+      return {
+        ...prevData,
+        nodes: updatedNodes
+      };
+    });
+  }, [hostnameMappingConfig, setOriginalData]);
 
   // UI Selection State (not persisted - ephemeral)
   const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null);
@@ -87,6 +117,8 @@ const App: React.FC = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showDeviceManager, setShowDeviceManager] = useState(false);
+  const [showHostnameMappingPanel, setShowHostnameMappingPanel] = useState(false);
+  
   const [analysisSelection, setAnalysisSelection] = useState<{
     source: { id: string, country: string } | null;
     dest: { id: string, country: string } | null;
@@ -691,7 +723,14 @@ const App: React.FC = () => {
               <div className="h-full flex flex-col gap-6">
                 <div>
                   <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-4">Data Source</h2>
-                  <FileUpload onDataLoaded={handleDataLoaded} />
+                  <FileUpload onDataLoaded={handleDataLoaded} hostnameMappingConfig={hostnameMappingConfig || undefined} />
+                  <button
+                    onClick={() => setShowHostnameMappingPanel(true)}
+                    className="mt-2 w-full py-2 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Server className="w-3 h-3" />
+                    Hostname Mapping {hostnameMappingConfig?.mappings.length ? `(${hostnameMappingConfig.mappings.length})` : ''}
+                  </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4">
@@ -976,6 +1015,14 @@ const App: React.FC = () => {
               onClose={() => setShowDeviceManager(false)}
             />
           )}
+
+          {/* Hostname Mapping Panel */}
+          <HostnameMappingPanel
+            isOpen={showHostnameMappingPanel}
+            onClose={() => setShowHostnameMappingPanel(false)}
+            currentConfig={hostnameMappingConfig}
+            onConfigChange={setHostnameMappingConfig}
+          />
         </main>
       </div>
     </div >

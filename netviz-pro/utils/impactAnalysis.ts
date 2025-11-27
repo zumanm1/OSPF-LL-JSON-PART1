@@ -90,14 +90,41 @@ export function calculateLinkImpact(
     });
   });
 
-  // Count affected paths
+  // Count affected paths using correct pair-based matching
+  // Build maps keyed by source-destination pair for proper comparison
   let affectedCount = 0;
-  pathsBefore.forEach((pathBefore, idx) => {
-    const pathAfter = pathsAfter[idx];
-    if (!pathAfter || 
-        pathBefore.totalCost !== pathAfter.totalCost || 
-        pathBefore.nodes.join(',') !== pathAfter.nodes.join(',')) {
-      affectedCount++;
+  const pathsBeforeMap = new Map<string, PathResult[]>();
+  const pathsAfterMap = new Map<string, PathResult[]>();
+
+  pathsBefore.forEach(path => {
+    const key = `${path.nodes[0]}->${path.nodes[path.nodes.length - 1]}`;
+    if (!pathsBeforeMap.has(key)) pathsBeforeMap.set(key, []);
+    pathsBeforeMap.get(key)!.push(path);
+  });
+
+  pathsAfter.forEach(path => {
+    const key = `${path.nodes[0]}->${path.nodes[path.nodes.length - 1]}`;
+    if (!pathsAfterMap.has(key)) pathsAfterMap.set(key, []);
+    pathsAfterMap.get(key)!.push(path);
+  });
+
+  // Compare paths for each source-destination pair
+  pathsBeforeMap.forEach((beforePaths, pairKey) => {
+    const afterPaths = pathsAfterMap.get(pairKey) || [];
+
+    // Mark as affected if:
+    // 1. Number of paths changed
+    // 2. Best path cost changed
+    // 3. Best path route changed
+    if (beforePaths.length !== afterPaths.length) {
+      affectedCount += beforePaths.length;
+    } else {
+      beforePaths.forEach((bp, i) => {
+        const ap = afterPaths[i];
+        if (!ap || bp.totalCost !== ap.totalCost || bp.nodes.join(',') !== ap.nodes.join(',')) {
+          affectedCount++;
+        }
+      });
     }
   });
 
@@ -120,19 +147,24 @@ export function calculateLinkImpact(
 
       // Downstream impact: find all paths that used this link
       const downstreamImpact = new Set<string>();
-      pathsBefore.forEach((path, idx) => {
-        const pathAfter = pathsAfter[idx];
-        // Check if path used this link
-        const usedLink = path.nodes.some((nodeId, i) => {
-          if (i === path.nodes.length - 1) return false;
-          const nextNode = path.nodes[i + 1];
-          return (nodeId === sourceId && nextNode === targetId) ||
-                 (nodeId === targetId && nextNode === sourceId);
-        });
+      pathsBeforeMap.forEach((beforePaths, pairKey) => {
+        const afterPaths = pathsAfterMap.get(pairKey) || [];
 
-        if (usedLink && pathAfter && path.totalCost !== pathAfter.totalCost) {
-          path.nodes.forEach(nodeId => downstreamImpact.add(nodeId));
-        }
+        beforePaths.forEach((path, idx) => {
+          const pathAfter = afterPaths[idx];
+          // Check if path used this link
+          const usedLink = path.nodes.some((nodeId, i) => {
+            if (i === path.nodes.length - 1) return false;
+            const nextNode = path.nodes[i + 1];
+            return (nodeId === sourceId && nextNode === targetId) ||
+                   (nodeId === targetId && nextNode === sourceId);
+          });
+
+          // Track downstream if: path used this link AND (no after path OR cost changed)
+          if (usedLink && (!pathAfter || path.totalCost !== pathAfter.totalCost)) {
+            path.nodes.forEach(nodeId => downstreamImpact.add(nodeId));
+          }
+        });
       });
 
       // Count affected country pairs for this link

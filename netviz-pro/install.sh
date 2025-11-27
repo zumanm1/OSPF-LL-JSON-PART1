@@ -4,7 +4,7 @@
 # ============================================================================
 # This script handles complete installation including:
 # - Version validation (Node.js, npm, git)
-# - Port cleanup (stops services on 9040, 9041, 9042)
+# - Port cleanup (stops services on 9040, 9041)
 # - Database reset
 # - Old installation removal
 # - Fresh clone and dependency installation
@@ -24,7 +24,7 @@ NC='\033[0m' # No Color
 REPO_URL="https://github.com/zumanm1/OSPF2-LL-JSON.git"
 INSTALL_DIR="$HOME/OSPF2-LL-JSON"
 APP_DIR="$INSTALL_DIR/netviz-pro"
-PORTS="9040 9041 9042"
+PORTS="9040 9041"
 
 # ============================================================================
 # Helper Functions
@@ -229,12 +229,11 @@ echo "  │  IMPORTANT: Change password after first login!          │"
 echo "  └─────────────────────────────────────────────────────────┘"
 echo ""
 echo "  Server Architecture:"
-echo "  - Gateway (public):     Port 9040"
+echo "  - App (public):         Port 9040"
 echo "  - Auth API (localhost): Port 9041"
-echo "  - Vite (localhost):     Port 9042"
 echo ""
 echo "  Logs: /tmp/netviz-pro.log"
-echo "  Stop: lsof -ti:9040,9041,9042 | xargs kill -9"
+echo "  Stop: lsof -ti:9040,9041 | xargs kill -9"
 echo ""
 echo -e "  ${BLUE}Thank you for using NetViz Pro!${NC}"
 echo ""

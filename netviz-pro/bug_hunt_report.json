@@ -1,0 +1,237 @@
+{
+  "timestamp": "2025-11-27T23:01:51.057Z",
+  "summary": {
+    "passed": 32,
+    "warnings": 3,
+    "bugs": 5
+  },
+  "passed": [
+    {
+      "category": "Auth",
+      "description": "Login screen displayed correctly",
+      "timestamp": "2025-11-27T23:01:34.556Z"
+    },
+    {
+      "category": "Auth",
+      "description": "Login with default credentials successful",
+      "timestamp": "2025-11-27T23:01:37.374Z"
+    },
+    {
+      "category": "UI",
+      "description": "Header component rendered",
+      "timestamp": "2025-11-27T23:01:38.376Z"
+    },
+    {
+      "category": "UI",
+      "description": "Sidebar rendered",
+      "timestamp": "2025-11-27T23:01:38.377Z"
+    },
+    {
+      "category": "UI",
+      "description": "SVG graph container exists",
+      "timestamp": "2025-11-27T23:01:38.378Z"
+    },
+    {
+      "category": "UI",
+      "description": "File upload zone exists",
+      "timestamp": "2025-11-27T23:01:38.378Z"
+    },
+    {
+      "category": "Graph",
+      "description": "Nodes rendered correctly (18 circles)",
+      "timestamp": "2025-11-27T23:01:41.230Z"
+    },
+    {
+      "category": "Graph",
+      "description": "Links rendered (23 lines)",
+      "timestamp": "2025-11-27T23:01:41.231Z"
+    },
+    {
+      "category": "Simulation",
+      "description": "Simulation mode can be activated",
+      "timestamp": "2025-11-27T23:01:41.739Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Pair modal opens",
+      "timestamp": "2025-11-27T23:01:42.086Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Impact modal opens",
+      "timestamp": "2025-11-27T23:01:42.634Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Transit modal opens",
+      "timestamp": "2025-11-27T23:01:43.189Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Matrix modal opens",
+      "timestamp": "2025-11-27T23:01:43.749Z"
+    },
+    {
+      "category": "Modal",
+      "description": "What-If modal opens",
+      "timestamp": "2025-11-27T23:01:44.312Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Dijkstra modal opens",
+      "timestamp": "2025-11-27T23:01:44.880Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Traffic modal opens",
+      "timestamp": "2025-11-27T23:01:45.448Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Optimizer modal opens",
+      "timestamp": "2025-11-27T23:01:46.015Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Ripple modal opens",
+      "timestamp": "2025-11-27T23:01:46.582Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Health modal opens",
+      "timestamp": "2025-11-27T23:01:47.174Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Capacity modal opens",
+      "timestamp": "2025-11-27T23:01:47.761Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Util Matrix modal opens",
+      "timestamp": "2025-11-27T23:01:48.371Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Pre/Post modal opens",
+      "timestamp": "2025-11-27T23:01:48.959Z"
+    },
+    {
+      "category": "Modal",
+      "description": "Intf modal opens",
+      "timestamp": "2025-11-27T23:01:49.560Z"
+    },
+    {
+      "category": "Export",
+      "description": "Export All button exists",
+      "timestamp": "2025-11-27T23:01:49.765Z"
+    },
+    {
+      "category": "Storage",
+      "description": "netviz_auth_user is valid JSON",
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Storage",
+      "description": "netviz_original_data is valid JSON",
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Storage",
+      "description": "netviz_link_overrides is valid JSON",
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Storage",
+      "description": "netviz_hostname_mapping is valid JSON",
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Storage",
+      "description": "netviz_active_countries is valid JSON",
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Storage",
+      "description": "netviz_simulation_mode is valid JSON",
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Responsive",
+      "description": "App functional at 1024x768",
+      "timestamp": "2025-11-27T23:01:50.280Z"
+    },
+    {
+      "category": "Analysis",
+      "description": "Path analysis sidebar functional",
+      "timestamp": "2025-11-27T23:01:50.878Z"
+    }
+  ],
+  "warnings": [
+    {
+      "category": "Theme",
+      "description": "Theme toggle button may not be working",
+      "details": null,
+      "timestamp": "2025-11-27T23:01:49.765Z"
+    },
+    {
+      "category": "Console",
+      "description": "Console error: Failed to load resource: net::ERR_FAILED",
+      "details": null,
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Console",
+      "description": "Console error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "details": null,
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    }
+  ],
+  "bugs": [
+    {
+      "category": "Auth",
+      "severity": "critical",
+      "description": "Auth server not reachable",
+      "details": {
+        "error": "Failed to fetch"
+      },
+      "timestamp": "2025-11-27T23:01:33.480Z"
+    },
+    {
+      "category": "CORS",
+      "severity": "high",
+      "description": "CORS error detected",
+      "details": {
+        "error": "Access to fetch at 'http://127.0.0.1:9041/api/health' from origin 'null' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+      },
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Network",
+      "severity": "medium",
+      "description": "Request failed: http://127.0.0.1:9041/api/health",
+      "details": {
+        "failure": "net::ERR_FAILED"
+      },
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Storage",
+      "severity": "medium",
+      "description": "netviz_theme has invalid JSON",
+      "details": {
+        "error": "Unexpected token 'd', \"dark\" is not valid JSON"
+      },
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    },
+    {
+      "category": "Storage",
+      "severity": "medium",
+      "description": "netviz_auth_token has invalid JSON",
+      "details": {
+        "error": "Unexpected token 'e', \"eyJhbGciOi\"... is not valid JSON"
+      },
+      "timestamp": "2025-11-27T23:01:49.766Z"
+    }
+  ]
+}

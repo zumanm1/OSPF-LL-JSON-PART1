@@ -1,0 +1,61 @@
+{
+  "timestamp": "2025-11-27T23:11:20.704Z",
+  "summary": {
+    "passed": 10,
+    "warnings": 0,
+    "failed": 2
+  },
+  "passed": [
+    {
+      "test": "App loads successfully",
+      "detail": ""
+    },
+    {
+      "test": "Authentication works",
+      "detail": ""
+    },
+    {
+      "test": "Header rendered",
+      "detail": ""
+    },
+    {
+      "test": "SVG container rendered",
+      "detail": ""
+    },
+    {
+      "test": "Nodes rendered",
+      "detail": "18 circles"
+    },
+    {
+      "test": "Links rendered",
+      "detail": "23 lines"
+    },
+    {
+      "test": "Simulation mode activates",
+      "detail": ""
+    },
+    {
+      "test": "Find All button enabled after selection",
+      "detail": ""
+    },
+    {
+      "test": "Path calculation produces results",
+      "detail": ""
+    },
+    {
+      "test": "All 14 modals open correctly",
+      "detail": ""
+    }
+  ],
+  "failed": [
+    {
+      "test": "Theme toggle not working",
+      "detail": ""
+    },
+    {
+      "test": "JS Error",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  ],
+  "warnings": []
+}

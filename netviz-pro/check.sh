@@ -150,10 +150,10 @@ echo ""
 # ============================================================================
 # Check: Ports
 # ============================================================================
-echo -e "${CYAN}[6/7] Port Availability (9040, 9041, 9042)${NC}"
+echo -e "${CYAN}[6/7] Port Availability (9040, 9041)${NC}"
 PORTS_BLOCKED=0
 
-for PORT in 9040 9041 9042; do
+for PORT in 9040 9041; do
     PID=$(lsof -ti:$PORT 2>/dev/null || true)
     if [ -n "$PID" ]; then
         PROCESS=$(ps -p $PID -o comm= 2>/dev/null || echo "unknown")

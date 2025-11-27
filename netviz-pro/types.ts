@@ -1,9 +1,16 @@
+// Router role types for network topology
+export type RouterRole = 'PE' | 'P' | 'RR' | 'CE' | 'ABR' | 'ASBR' | 'unknown';
+
 export interface NetworkNode {
   id: string;
   name: string;
-  hostname: string;
+  hostname: string;           // Display hostname (can be mapped to new format)
+  original_hostname?: string; // Original hostname from data source
   loopback_ip: string;
   country: string;
+  city?: string;              // City code extracted from hostname (e.g., 'ber' from deu-ber-bes-pe10)
+  site?: string;              // Site code extracted from hostname (e.g., 'bes' from deu-ber-bes-pe10)
+  role?: RouterRole;          // Router role: PE, P, RR, etc.
   port?: number;
   neighbor_count?: number;
   is_active: boolean;
@@ -110,4 +117,17 @@ export interface PathResult {
   links: number[]; // Array of Link Indices (if available) or we match by source/target
   totalCost: number;
   hopCount: number;
+}
+
+// Hostname mapping configuration
+export interface HostnameMapping {
+  old_hostname: string;  // Original short hostname (e.g., 'deu-r10')
+  new_hostname: string;  // New long hostname (e.g., 'deu-ber-bes-pe10')
+  role: RouterRole;      // Router role: PE, P, RR, etc.
+}
+
+export interface HostnameMappingConfig {
+  mappings: HostnameMapping[];
+  // Optional: auto-detect role from hostname pattern
+  auto_detect_role?: boolean;
 }

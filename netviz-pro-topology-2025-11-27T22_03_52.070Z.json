@@ -1,0 +1,623 @@
+{
+  "nodes": [
+    {
+      "id": "deu-r10",
+      "name": "deu-r10",
+      "hostname": "deu-r10",
+      "loopback_ip": "172.16.10.10",
+      "country": "DEU",
+      "is_active": true,
+      "node_type": "router"
+    },
+    {
+      "id": "gbr-r9",
+      "name": "gbr-r9",
+      "hostname": "gbr-r9",
+      "loopback_ip": "172.16.9.9",
+      "country": "GBR",
+      "is_active": true,
+      "node_type": "router"
+    },
+    {
+      "id": "usa-r8",
+      "name": "usa-r8",
+      "hostname": "usa-r8",
+      "loopback_ip": "172.16.8.8",
+      "country": "USA",
+      "is_active": true,
+      "node_type": "router"
+    },
+    {
+      "id": "zwe-r3",
+      "name": "zwe-r3",
+      "hostname": "zwe-r3",
+      "loopback_ip": "172.16.3.3",
+      "country": "ZWE",
+      "is_active": true,
+      "node_type": "router"
+    },
+    {
+      "id": "zwe-r1",
+      "name": "zwe-r1",
+      "hostname": "zwe-r1",
+      "loopback_ip": "172.16.1.1",
+      "country": "ZWE",
+      "is_active": true,
+      "node_type": "router"
+    },
+    {
+      "id": "zwe-r4",
+      "name": "zwe-r4",
+      "hostname": "zwe-r4",
+      "loopback_ip": "172.16.4.4",
+      "country": "ZWE",
+      "is_active": true,
+      "node_type": "router"
+    },
+    {
+      "id": "deu-r6",
+      "name": "deu-r6",
+      "hostname": "deu-r6",
+      "loopback_ip": "172.16.6.6",
+      "country": "DEU",
+      "is_active": true,
+      "node_type": "router"
+    },
+    {
+      "id": "zwe-r2",
+      "name": "zwe-r2",
+      "hostname": "zwe-r2",
+      "loopback_ip": "172.16.2.2",
+      "country": "ZWE",
+      "is_active": true,
+      "node_type": "router"
+    },
+    {
+      "id": "usa-r5",
+      "name": "usa-r5",
+      "hostname": "usa-r5",
+      "loopback_ip": "172.16.5.5",
+      "country": "USA",
+      "is_active": true,
+      "node_type": "router"
+    },
+    {
+      "id": "gbr-r7",
+      "name": "gbr-r7",
+      "hostname": "gbr-r7",
+      "loopback_ip": "172.16.7.7",
+      "country": "GBR",
+      "is_active": true,
+      "node_type": "router"
+    }
+  ],
+  "links": [
+    {
+      "source": "deu-r10",
+      "target": "usa-r5",
+      "source_interface": "GigabitEthernet0/0/0/1",
+      "target_interface": "GigabitEthernet0/0/0/1",
+      "forward_cost": 600,
+      "reverse_cost": 800,
+      "cost": 600,
+      "status": "up",
+      "edge_type": "asymmetric",
+      "is_asymmetric": true,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "deu-r10",
+      "target": "zwe-r2",
+      "source_interface": "GigabitEthernet0/0/0/3",
+      "target_interface": "GigabitEthernet0/0/0/3",
+      "forward_cost": 10,
+      "reverse_cost": 10,
+      "cost": 10,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "deu-r10",
+      "target": "deu-r6",
+      "source_interface": "GigabitEthernet0/0/0/4",
+      "target_interface": "GigabitEthernet0/0/0/4",
+      "forward_cost": 10,
+      "reverse_cost": 10,
+      "cost": 10,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "gbr-r9",
+      "target": "usa-r8",
+      "source_interface": "GigabitEthernet0/0/0/1",
+      "target_interface": "GigabitEthernet0/0/0/3",
+      "forward_cost": 10,
+      "reverse_cost": 10,
+      "cost": 10,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "usa-r8",
+      "target": "zwe-r4",
+      "source_interface": "GigabitEthernet0/0/0/4",
+      "target_interface": "GigabitEthernet0/0/0/4",
+      "forward_cost": 250,
+      "reverse_cost": 150,
+      "cost": 250,
+      "status": "up",
+      "edge_type": "asymmetric",
+      "is_asymmetric": true,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "zwe-r3",
+      "target": "zwe-r4",
+      "source_interface": "GigabitEthernet0/0/0/1",
+      "target_interface": "GigabitEthernet0/0/0/1",
+      "forward_cost": 70,
+      "reverse_cost": 1130,
+      "cost": 70,
+      "status": "up",
+      "edge_type": "asymmetric",
+      "is_asymmetric": true,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "zwe-r1",
+      "target": "zwe-r2",
+      "source_interface": "GigabitEthernet0/0/0/1",
+      "target_interface": "GigabitEthernet0/0/0/1",
+      "forward_cost": 200,
+      "reverse_cost": 300,
+      "cost": 200,
+      "status": "up",
+      "edge_type": "asymmetric",
+      "is_asymmetric": true,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "zwe-r1",
+      "target": "zwe-r2",
+      "source_interface": "GigabitEthernet0/0/0/2.300",
+      "target_interface": "GigabitEthernet0/0/0/2.300",
+      "forward_cost": 1000,
+      "reverse_cost": 2000,
+      "cost": 1000,
+      "status": "up",
+      "edge_type": "asymmetric",
+      "is_asymmetric": true,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "zwe-r1",
+      "target": "zwe-r4",
+      "source_interface": "GigabitEthernet0/0/0/3",
+      "target_interface": "GigabitEthernet0/0/0/3",
+      "forward_cost": 10,
+      "reverse_cost": 1,
+      "cost": 10,
+      "status": "up",
+      "edge_type": "asymmetric",
+      "is_asymmetric": true,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "deu-r6",
+      "target": "zwe-r4",
+      "source_interface": "Bundle-Ether400.200",
+      "target_interface": "Bundle-Ether400.200",
+      "forward_cost": 1,
+      "reverse_cost": 1,
+      "cost": 1,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "10G",
+        "is_bundle": true,
+        "bundle_type": "bundle-ethernet",
+        "member_count": 2,
+        "member_speed": "1G",
+        "total_capacity_mbps": 2000
+      },
+      "target_capacity": {
+        "speed": "10G",
+        "is_bundle": true,
+        "bundle_type": "bundle-ethernet",
+        "member_count": 2,
+        "member_speed": "1G",
+        "total_capacity_mbps": 2000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "deu-r6",
+      "target": "gbr-r7",
+      "source_interface": "GigabitEthernet0/0/0/1",
+      "target_interface": "GigabitEthernet0/0/0/1",
+      "forward_cost": 10,
+      "reverse_cost": 10,
+      "cost": 10,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "deu-r6",
+      "target": "gbr-r9",
+      "source_interface": "GigabitEthernet0/0/0/3",
+      "target_interface": "GigabitEthernet0/0/0/3",
+      "forward_cost": 180,
+      "reverse_cost": 90,
+      "cost": 180,
+      "status": "up",
+      "edge_type": "asymmetric",
+      "is_asymmetric": true,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "zwe-r2",
+      "target": "zwe-r3",
+      "source_interface": "GigabitEthernet0/0/0/4",
+      "target_interface": "GigabitEthernet0/0/0/4",
+      "forward_cost": 10,
+      "reverse_cost": 10,
+      "cost": 10,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "zwe-r2",
+      "target": "zwe-r3",
+      "source_interface": "GigabitEthernet0/0/0/6",
+      "target_interface": "GigabitEthernet0/0/0/7",
+      "forward_cost": 10,
+      "reverse_cost": 10,
+      "cost": 10,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "usa-r5",
+      "target": "zwe-r3",
+      "source_interface": "Bundle-Ether200",
+      "target_interface": "Bundle-Ether200",
+      "forward_cost": 1,
+      "reverse_cost": 1,
+      "cost": 1,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "10G",
+        "is_bundle": true,
+        "bundle_type": "bundle-ethernet",
+        "member_count": 2,
+        "member_speed": "1G",
+        "total_capacity_mbps": 2000
+      },
+      "target_capacity": {
+        "speed": "10G",
+        "is_bundle": true,
+        "bundle_type": "bundle-ethernet",
+        "member_count": 2,
+        "member_speed": "1G",
+        "total_capacity_mbps": 2000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "usa-r5",
+      "target": "usa-r8",
+      "source_interface": "GigabitEthernet0/0/0/3",
+      "target_interface": "GigabitEthernet0/0/0/1",
+      "forward_cost": 10,
+      "reverse_cost": 10,
+      "cost": 10,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "gbr-r7",
+      "target": "zwe-r1",
+      "source_interface": "GigabitEthernet0/0/0/3",
+      "target_interface": "GigabitEthernet0/0/0/4",
+      "forward_cost": 500,
+      "reverse_cost": 400,
+      "cost": 500,
+      "status": "up",
+      "edge_type": "asymmetric",
+      "is_asymmetric": true,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    },
+    {
+      "source": "gbr-r7",
+      "target": "gbr-r9",
+      "source_interface": "GigabitEthernet0/0/0/4",
+      "target_interface": "GigabitEthernet0/0/0/4",
+      "forward_cost": 10,
+      "reverse_cost": 10,
+      "cost": 10,
+      "status": "up",
+      "edge_type": "backbone",
+      "is_asymmetric": false,
+      "source_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "target_capacity": {
+        "speed": "1G",
+        "is_bundle": false,
+        "total_capacity_mbps": 1000
+      },
+      "traffic": {
+        "forward_traffic_mbps": 0,
+        "forward_utilization_pct": 0,
+        "reverse_traffic_mbps": 0,
+        "reverse_utilization_pct": 0
+      }
+    }
+  ],
+  "metadata": {
+    "export_timestamp": "2025-11-28T00:03:52.055227",
+    "node_count": 10,
+    "edge_count": 18,
+    "asymmetric_count": 8,
+    "description": "Network topology with 10 nodes and 18 links",
+    "data_source": "OSPF-LL-DEVICE_MANAGER",
+    "format_version": "netviz-pro-1.0"
+  },
+  "traffic_snapshots": [],
+  "current_snapshot_id": "baseline"
+}

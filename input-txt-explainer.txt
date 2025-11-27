@@ -1,0 +1,629 @@
+================================================================================
+                    NETVIZ PRO - INPUT FILE EXPLAINER
+                    /Users/macbook/OSPF-LL-JSON/input-file-TX.json
+================================================================================
+
+This document explains the structure of the input topology file and how
+the NetViz Pro application consumes and processes it.
+
+================================================================================
+                    SECTION 1: FILE LOCATION & FORMATS
+================================================================================
+
+File Path: /Users/macbook/OSPF-LL-JSON/input-file-TX.json
+
+The app supports THREE input formats:
+
+1. STANDARD FORMAT (used in input-file-TX.json) ← CURRENT FILE
+   - Contains: { nodes: [...], links: [...], metadata: {...}, traffic_snapshots: [...] }
+
+2. PyATS FORMAT (Cisco network automation output)
+   - Contains: { files: [...] }
+   - Auto-detected and converted to standard format
+
+3. PHYSICAL_LINKS FORMAT (database export)
+   - Contains: { nodes: [...], physical_links: [...] }
+   - Auto-detected and converted to standard format
+
+
+================================================================================
+                    SECTION 2: FILE STRUCTURE BREAKDOWN
+================================================================================
+
+The input-file-TX.json file has this structure:
+
+{
+  "nodes": [
+    {
+      "id": "R1-US-NYC",              // REQUIRED: Unique node identifier
+      "name": "R1-US-NYC",            // Display name
+      "hostname": "us-nyc-core-r1",   // Router hostname
+      "loopback_ip": "10.0.1.1",      // Loopback IP address
+      "country": "USA",               // REQUIRED: Country code (ISO 3-letter)
+      "is_active": true,              // Node status (true/false)
+      "node_type": "core_router"      // Type: core_router, edge_router, transit_hub
+    },
+    ... (18 nodes total in this topology)
+  ],
+
+  "links": [
+    {
+      "source": "R1-US-NYC",           // REQUIRED: Source node ID
+      "target": "R2-US-LAX",           // REQUIRED: Target node ID
+      "source_interface": "Bundle-Ether100",  // Interface name on source
+      "target_interface": "Bundle-Ether100",  // Interface name on target
+      "forward_cost": 50,              // OSPF cost source→target
+      "reverse_cost": 50,              // OSPF cost target→source
+      "cost": 50,                      // Legacy cost field
+      "is_asymmetric": false,          // true if forward_cost != reverse_cost
+      "status": "up",                  // Link status: "up" or "down"
+      "edge_type": "backbone",         // Link classification
+
+      // CAPACITY DATA (for traffic analysis)
+      "source_capacity": {
+        "speed": "100G",               // Interface speed
+        "is_bundle": true,             // Is this a bundle/LAG?
+        "bundle_type": "bundle-ethernet",
+        "member_count": 4,             // 4 x 100G members
+        "member_speed": "100G",
+        "total_capacity_mbps": 400000  // 400 Gbps total
+      },
+      "target_capacity": { ... },
+
+      // TRAFFIC DATA (for utilization analysis)
+      "traffic": {
+        "forward_traffic_mbps": 180000,      // 180 Gbps forward
+        "forward_utilization_pct": 45,       // 45% utilized
+        "reverse_traffic_mbps": 220000,      // 220 Gbps reverse
+        "reverse_utilization_pct": 55,       // 55% utilized
+        "peak_forward_mbps": 350000,         // Peak traffic (optional)
+        "peak_reverse_mbps": 380000
+      }
+    },
+    ... (30 links total in this topology)
+  ],
+
+  "metadata": {
+    "export_timestamp": "2025-11-25T12:00:00Z",
+    "node_count": 18,
+    "edge_count": 30,
+    "layout_algorithm": "force_directed",
+    "data_source": "Global WAN Test Topology v2",
+    "snapshot_id": 1001,
+    "description": "Comprehensive test topology..."
+  },
+
+  "traffic_snapshots": [
+    {
+      "snapshot_id": "baseline",
+      "snapshot_name": "Baseline Traffic (Off-Peak)",
+      "timestamp": "2025-11-25T04:00:00Z",
+      "link_traffic": {
+        "0": { "forward_traffic_mbps": 120000, ... },  // Link index 0
+        "3": { "forward_traffic_mbps": 100000, ... },  // Link index 3
+        ...
+      }
+    },
+    { "snapshot_id": "peak", ... },
+    { "snapshot_id": "maintenance", ... }
+  ],
+
+  "current_snapshot_id": "baseline"
+}
+
+
+================================================================================
+                    SECTION 3: HOW THE APP CONSUMES THE FILE
+================================================================================
+
+STEP-BY-STEP DATA FLOW:
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  STEP 1: USER ACTION                                                        │
+│  ─────────────────────                                                      │
+│  User clicks "Upload Topology" or drags/drops a .json file                  │
+│  Location: FileUpload.tsx component                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  STEP 2: FILE READING                                                       │
+│  ─────────────────────                                                      │
+│  FileReader API reads the file as text                                      │
+│  Code:                                                                      │
+│    const reader = new FileReader();                                         │
+│    reader.onload = (e) => {                                                 │
+│      const json = JSON.parse(e.target.result);                              │
+│    };                                                                       │
+│    reader.readAsText(file);                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  STEP 3: FORMAT DETECTION                                                   │
+│  ────────────────────────                                                   │
+│  The app auto-detects the format:                                           │
+│                                                                             │
+│  if (json.files && Array.isArray(json.files)) {                             │
+│    // PyATS Format → Call parsePyATSData(json)                              │
+│  }                                                                          │
+│  else if (json.nodes && json.physical_links) {                              │
+│    // Physical Links Format → Convert router_a/router_b to source/target    │
+│  }                                                                          │
+│  else if (json.nodes && Array.isArray(json.nodes)) {                        │
+│    // Standard Format → Process directly (input-file-TX.json uses this)     │
+│  }                                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  STEP 4: DATA NORMALIZATION                                                 │
+│  ──────────────────────────                                                 │
+│  For STANDARD FORMAT (input-file-TX.json):                                  │
+│                                                                             │
+│  1. Nodes are processed:                                                    │
+│     - is_active defaults to true if undefined                               │
+│     - loopback_ip falls back to hostname if missing                         │
+│                                                                             │
+│  2. Links are processed:                                                    │
+│     - Asymmetric costs detected (forward_cost != reverse_cost)              │
+│     - Duplicate directional links consolidated                              │
+│     - Capacity and traffic data preserved                                   │
+│                                                                             │
+│  Result: processedData: NetworkData                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  STEP 5: STATE UPDATE                                                       │
+│  ────────────────────                                                       │
+│  Callback to parent component:                                              │
+│    onDataLoaded(processedData);                                             │
+│                                                                             │
+│  In App.tsx:                                                                │
+│    const [networkData, setNetworkData] = useState<NetworkData>(SAMPLE_DATA);│
+│    const handleDataLoaded = (data: NetworkData) => {                        │
+│      setNetworkData(data);        // Updates React state                    │
+│      setActiveTab('topology');    // Switches to topology view              │
+│    };                                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  STEP 6: RENDERING                                                          │
+│  ─────────────────                                                          │
+│  NetworkGraph component receives data and renders:                          │
+│                                                                             │
+│  1. D3.js force-directed graph simulation                                   │
+│  2. Nodes positioned by country grouping                                    │
+│  3. Links drawn with color coding (asymmetric = blue gradient)              │
+│  4. Interactive features (zoom, pan, click selection)                       │
+│                                                                             │
+│  Other components also consume the data:                                    │
+│  - CapacityPlanningModal     → Uses source_capacity, traffic fields         │
+│  - TrafficUtilizationMatrix  → Uses traffic data for country matrix         │
+│  - TransitAnalyzerModal      → Uses country field for transit analysis      │
+│  - CostMatrixModal           → Uses forward_cost, reverse_cost              │
+│  - DijkstraModal             → Uses costs for shortest path calculation     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                    SECTION 4: DATA FIELD REFERENCE
+================================================================================
+
+NODES (NetworkNode):
+─────────────────────────────────────────────────────────────────────────────
+Field           Type      Required   Description
+─────────────────────────────────────────────────────────────────────────────
+id              string    YES        Unique identifier (e.g., "R1-US-NYC")
+name            string    YES        Display name
+hostname        string    NO         Router hostname
+loopback_ip     string    NO         IP address (shown in details panel)
+country         string    YES        ISO 3-letter country code (e.g., "USA")
+is_active       boolean   NO         Default: true
+node_type       string    NO         "core_router", "edge_router", "transit_hub"
+─────────────────────────────────────────────────────────────────────────────
+
+LINKS (NetworkLink):
+─────────────────────────────────────────────────────────────────────────────
+Field              Type      Required   Description
+─────────────────────────────────────────────────────────────────────────────
+source             string    YES        Source node ID
+target             string    YES        Target node ID
+source_interface   string    NO         Interface name (e.g., "Bundle-Ether100")
+target_interface   string    NO         Interface name
+cost               number    YES        OSPF cost (symmetric)
+forward_cost       number    NO         OSPF cost source→target (asymmetric)
+reverse_cost       number    NO         OSPF cost target→source (asymmetric)
+is_asymmetric      boolean   NO         Auto-detected if costs differ
+status             string    NO         "up" or "down"
+edge_type          string    NO         Link classification
+source_capacity    object    NO         Capacity data (see below)
+target_capacity    object    NO         Capacity data (see below)
+traffic            object    NO         Traffic data (see below)
+─────────────────────────────────────────────────────────────────────────────
+
+INTERFACE CAPACITY (InterfaceCapacity):
+─────────────────────────────────────────────────────────────────────────────
+Field              Type      Required   Description
+─────────────────────────────────────────────────────────────────────────────
+speed              string    YES        "1G", "10G", "25G", "40G", "100G", "400G"
+is_bundle          boolean   NO         True if LAG/bundle
+bundle_type        string    NO         "bundle-ethernet", "port-channel", "lag"
+member_count       number    NO         Number of member interfaces
+member_speed       string    NO         Speed of each member
+total_capacity_mbps number   YES        Total capacity in Mbps
+vlan_id            number    NO         VLAN ID if subinterface
+is_subinterface    boolean   NO         True if subinterface
+─────────────────────────────────────────────────────────────────────────────
+
+TRAFFIC DATA (TrafficData):
+─────────────────────────────────────────────────────────────────────────────
+Field                   Type      Required   Description
+─────────────────────────────────────────────────────────────────────────────
+forward_traffic_mbps    number    YES        Traffic source→target (Mbps)
+forward_utilization_pct number    YES        Utilization % (0-100)
+reverse_traffic_mbps    number    YES        Traffic target→source (Mbps)
+reverse_utilization_pct number    YES        Utilization % (0-100)
+peak_forward_mbps       number    NO         Peak forward traffic
+peak_reverse_mbps       number    NO         Peak reverse traffic
+snapshot_timestamp      string    NO         ISO timestamp
+─────────────────────────────────────────────────────────────────────────────
+
+
+================================================================================
+                    SECTION 5: COUNTRIES IN THIS TOPOLOGY
+================================================================================
+
+The input-file-TX.json contains 18 nodes across 12 countries:
+
+Country Code   Country Name        Nodes
+─────────────────────────────────────────────────────────────────────────────
+USA            United States       R1-US-NYC, R2-US-LAX, R3-US-CHI
+GBR            United Kingdom      R4-UK-LON, R5-UK-MAN
+DEU            Germany             R6-DE-FRA, R7-DE-BER
+FRA            France              R8-FR-PAR
+NLD            Netherlands         R9-NL-AMS (Transit Hub)
+JPN            Japan               R10-JP-TKY, R11-JP-OSA
+SGP            Singapore           R12-SG-SIN (Transit Hub)
+AUS            Australia           R13-AU-SYD, R14-AU-MEL
+BRA            Brazil              R15-BR-SAO
+ZAF            South Africa        R16-ZA-JNB
+IND            India               R17-IN-MUM
+ARE            UAE                 R18-AE-DXB (Transit Hub)
+─────────────────────────────────────────────────────────────────────────────
+
+
+================================================================================
+                    SECTION 6: LINK TYPES IN THIS TOPOLOGY
+================================================================================
+
+The 30 links include various interface types:
+
+Interface Type          Capacity    Example
+─────────────────────────────────────────────────────────────────────────────
+Bundle-Ether (4x100G)   400 Gbps    R1-US-NYC ↔ R2-US-LAX
+Bundle-Ether (2x100G)   200 Gbps    R1-US-NYC ↔ R4-UK-LON (Transatlantic)
+Bundle-Ether (4x10G)    40 Gbps     R6-DE-FRA ↔ R9-NL-AMS
+HundredGigE             100 Gbps    R4-UK-LON ↔ R6-DE-FRA
+TenGigE                 10 Gbps     R2-US-LAX ↔ R3-US-CHI
+TenGigE (VLAN 100)      10 Gbps     R15-BR-SAO ↔ R16-ZA-JNB (Subinterface)
+─────────────────────────────────────────────────────────────────────────────
+
+Edge Types: backbone, transatlantic, transpacific, european, asian,
+            americas, submarine, middle_east, african, intercontinental
+
+
+================================================================================
+                    SECTION 7: TRAFFIC SNAPSHOTS
+================================================================================
+
+The file includes 3 pre-configured traffic snapshots for comparison:
+
+1. BASELINE (snapshot_id: "baseline")
+   - Off-peak traffic at 04:00
+   - Lower utilization across all links
+   - Use for: Normal operations baseline
+
+2. PEAK (snapshot_id: "peak")
+   - Business hours at 14:00
+   - High utilization (up to 98%)
+   - Use for: Capacity planning, congestion analysis
+
+3. MAINTENANCE (snapshot_id: "maintenance")
+   - Maintenance window at 02:00
+   - Minimal traffic
+   - Use for: Planning maintenance windows
+
+
+================================================================================
+                    SECTION 8: HOW TO USE THE FILE
+================================================================================
+
+1. LOAD THE FILE:
+   - Open the app at http://localhost:9040
+   - Click "Upload Topology" or drag-drop the file
+   - The graph will render automatically
+
+2. EXPLORE FEATURES:
+   - Click nodes to see details (IP, country, status)
+   - Click links to see interface and cost info
+   - Use country filters in the sidebar
+
+3. ANALYSIS TOOLS:
+   - "Capacity" → View link utilization dashboard
+   - "Util Matrix" → See country-to-country traffic matrix
+   - "Transit" → Identify transit countries
+   - "Dijkstra" → Find shortest paths
+   - "What-If" → Simulate link failures
+
+4. MODIFY THE FILE:
+   - Add/remove nodes in the "nodes" array
+   - Add/remove links in the "links" array
+   - Update traffic data for new analysis
+   - Add new traffic_snapshots for comparison
+
+
+================================================================================
+                    SECTION 9: APP COMPONENTS & WEBPAGES
+================================================================================
+
+HIGH-LEVEL OVERVIEW: Each "webpage" is actually a modal or panel that consumes
+specific fields from the input file. Here's what each component needs:
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 1: NETWORK GRAPH (Main View)                                     │
+│  File: components/NetworkGraph.tsx                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Renders the interactive network topology visualization            │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── nodes[].id          → Node positioning and identification              │
+│  ├── nodes[].country     → Color coding and grouping                        │
+│  ├── nodes[].is_active   → Active/inactive visual state                     │
+│  ├── links[].source      → Draw line from this node                         │
+│  ├── links[].target      → Draw line to this node                           │
+│  ├── links[].status      → Show as solid (up) or dashed (down)              │
+│  └── links[].is_asymmetric → Show gradient for asymmetric links             │
+│                                                                             │
+│  FEATURES: Zoom, pan, node selection, link selection, country filtering     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 2: CAPACITY PLANNING DASHBOARD                                   │
+│  File: components/CapacityPlanningModal.tsx                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Shows interface capacity and traffic utilization for all links    │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── links[].source_interface    → Interface name display                   │
+│  ├── links[].source_capacity     → Capacity info (speed, bundle, total)     │
+│  ├── links[].target_capacity     → Capacity info                            │
+│  ├── links[].traffic             → Traffic data (Mbps, utilization %)       │
+│  └── links[].status              → Up/down status                           │
+│                                                                             │
+│  OUTPUTS: Critical/High/Medium/Low counts, Total Capacity, Avg Utilization  │
+│  FEATURES: Sort by utilization, filter by severity, Export CSV              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 3: TRAFFIC UTILIZATION MATRIX                                    │
+│  File: components/TrafficUtilizationMatrix.tsx                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Country-to-country traffic analysis with path utilization         │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── nodes[].country         → Build country list                           │
+│  ├── links[].traffic         → Calculate path utilization                   │
+│  ├── links[].forward_cost    → Find shortest paths (Dijkstra)               │
+│  ├── links[].reverse_cost    → Consider asymmetric routing                  │
+│  └── traffic_snapshots[]     → Compare different time periods               │
+│                                                                             │
+│  OUTPUTS: 12x12 matrix showing max utilization between country pairs        │
+│  FEATURES: Snapshot selector, upload custom snapshot, bottleneck detection  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 4: PRE/POST TRAFFIC ANALYZER                                     │
+│  File: components/PrePostTrafficModal.tsx                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Simulate routing changes and predict traffic impact               │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── All links data          → Build dropdown of modifiable links           │
+│  ├── links[].forward_cost    → Calculate pre-change paths                   │
+│  ├── links[].reverse_cost    → Calculate post-change paths                  │
+│  ├── links[].traffic         → Estimate traffic shifts                      │
+│  └── nodes[].country         → Group by country pairs                       │
+│                                                                             │
+│  OUTPUTS: Before/after utilization comparison, congestion warnings          │
+│  FEATURES: Disable link, double cost, halve cost, run analysis              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 5: TRANSIT COUNTRY ANALYZER                                      │
+│  File: components/TransitAnalyzerModal.tsx                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Identify which countries serve as transit hubs                    │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── nodes[].country         → List of countries                            │
+│  ├── links[].forward_cost    → Calculate all shortest paths                 │
+│  └── links[].reverse_cost    → Consider asymmetric routing                  │
+│                                                                             │
+│  OUTPUTS: Transit percentage per country, paths served, dependency score    │
+│  FEATURES: Filter by source/destination country                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 6: DIJKSTRA PATH FINDER                                          │
+│  File: components/DijkstraModal.tsx                                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Find shortest paths between selected nodes                        │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── nodes[].id              → Populate source/destination dropdowns        │
+│  ├── links[].forward_cost    → Calculate shortest path cost                 │
+│  └── links[].reverse_cost    → Handle asymmetric routing                    │
+│                                                                             │
+│  OUTPUTS: Path visualization, total cost, hop count, intermediate nodes     │
+│  FEATURES: Select source/dest, find multiple paths, highlight on graph      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 7: FULL COST MATRIX                                              │
+│  File: components/CostMatrixModal.tsx                                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Complete country-to-country cost matrix                           │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── nodes[].country         → Build matrix rows/columns                    │
+│  ├── links[].forward_cost    → Calculate min cost paths                     │
+│  └── links[].reverse_cost    → Handle asymmetric costs                      │
+│                                                                             │
+│  OUTPUTS: Full matrix with min cost, path count, hop count, transit nodes   │
+│  FEATURES: Filter by country, cost range filter, export CSV                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 8: WHAT-IF SIMULATOR                                             │
+│  File: components/WhatIfModal.tsx                                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Simulate link failures and cost changes                           │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── links[].source/target   → Build link dropdown                          │
+│  ├── links[].forward_cost    → Original costs for comparison                │
+│  ├── links[].reverse_cost    → Original costs                               │
+│  └── links[].status          → Toggle up/down                               │
+│                                                                             │
+│  OUTPUTS: Before/after routing comparison, affected paths                   │
+│  FEATURES: Disable link, modify cost, see routing changes                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 9: TRAFFIC FLOW ANALYZER                                         │
+│  File: components/TrafficFlowModal.tsx                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Analyze traffic flow patterns between nodes                       │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── nodes[].country         → Group flows by country                       │
+│  ├── links[].forward_cost    → Calculate flow paths                         │
+│  └── links[].traffic         → Show traffic volume per path                 │
+│                                                                             │
+│  OUTPUTS: Flow visualization, bottleneck identification                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 10: COST OPTIMIZER                                               │
+│  File: components/CostOptimizerModal.tsx                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Suggest optimal OSPF costs for balanced traffic                   │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── links[].forward_cost    → Current costs                                │
+│  ├── links[].reverse_cost    → Current costs                                │
+│  └── links[].traffic         → Current traffic distribution                 │
+│                                                                             │
+│  OUTPUTS: Recommended cost changes, expected improvement                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 11: RIPPLE EFFECT ANALYZER                                       │
+│  File: components/RippleEffectModal.tsx                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Analyze cascading effects of failures                             │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── nodes[].id              → Select failure point                         │
+│  ├── links[]                 → Analyze affected paths                       │
+│  └── nodes[].country         → Group affected traffic by country            │
+│                                                                             │
+│  OUTPUTS: Affected paths, traffic rerouting, secondary failures             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 12: NETWORK HEALTH                                               │
+│  File: components/NetworkHealthModal.tsx                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Overall network health assessment                                 │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── nodes[].is_active       → Count active/inactive nodes                  │
+│  ├── links[].status          → Count up/down links                          │
+│  ├── links[].traffic         → Identify high utilization                    │
+│  └── All path calculations   → Identify single points of failure            │
+│                                                                             │
+│  OUTPUTS: Health score, warnings, recommendations                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 13: PAIR COUNTRIES                                               │
+│  File: components/PairCountriesModal.tsx                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Deep analysis between two selected countries                      │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── nodes[].country         → Country selection dropdown                   │
+│  ├── links[].forward_cost    → Calculate all paths                          │
+│  └── links[].traffic         → Show traffic between pair                    │
+│                                                                             │
+│  OUTPUTS: All paths, costs, transit countries, diversity analysis           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  COMPONENT 14: IMPACT ANALYSIS                                              │
+│  File: components/ImpactAnalysisModal.tsx                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  PURPOSE: Analyze impact of specific link/node changes                      │
+│                                                                             │
+│  REQUIRED DATA:                                                             │
+│  ├── All nodes and links     → Build selection options                      │
+│  ├── links[].forward_cost    → Calculate before/after paths                 │
+│  └── links[].traffic         → Estimate traffic impact                      │
+│                                                                             │
+│  OUTPUTS: Affected paths, traffic shifts, congestion warnings               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                    SECTION 10: MINIMUM REQUIRED DATA
+================================================================================
+
+For the app to function properly, your input file MUST contain:
+
+ABSOLUTE MINIMUM (graph only):
+─────────────────────────────────────────────────────────────────────────────
+{
+  "nodes": [
+    { "id": "A", "name": "A", "country": "USA", "is_active": true }
+  ],
+  "links": [
+    { "source": "A", "target": "B", "cost": 10, "status": "up" }
+  ]
+}
+─────────────────────────────────────────────────────────────────────────────
+
+FOR FULL FEATURES (capacity/traffic analysis):
+─────────────────────────────────────────────────────────────────────────────
+Add to each link:
+  - source_capacity: { speed, total_capacity_mbps }
+  - target_capacity: { speed, total_capacity_mbps }
+  - traffic: { forward_traffic_mbps, forward_utilization_pct,
+               reverse_traffic_mbps, reverse_utilization_pct }
+─────────────────────────────────────────────────────────────────────────────
+
+FOR ASYMMETRIC ROUTING ANALYSIS:
+─────────────────────────────────────────────────────────────────────────────
+Add to each link:
+  - forward_cost: X   (cost from source to target)
+  - reverse_cost: Y   (cost from target to source)
+  - is_asymmetric: true/false
+─────────────────────────────────────────────────────────────────────────────
+
+
+================================================================================
+                    END OF EXPLAINER
+================================================================================

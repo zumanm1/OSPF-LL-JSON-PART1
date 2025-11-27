@@ -53,7 +53,7 @@ stop_port() {
 
 STOPPED=0
 
-for PORT in 9040 9041 9042; do
+for PORT in 9040 9041; do
     if stop_port $PORT; then
         STOPPED=$((STOPPED + 1))
     fi

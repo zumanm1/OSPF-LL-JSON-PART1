@@ -1,7 +1,8 @@
 import React from 'react';
 import { NetworkNode } from '../types';
-import { X, Server, Globe, Activity, Network, MapPin, ArrowRight } from 'lucide-react';
+import { X, Server, Globe, Activity, Network, MapPin, ArrowRight, Shield, Building2 } from 'lucide-react';
 import { COUNTRY_COLORS } from '../constants';
+import { getRoleBadgeStyle } from '../utils/hostnameMapper';
 
 interface DetailsPanelProps {
     node: NetworkNode | null;
@@ -34,10 +35,22 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node, onClose, onSetSource,
             <div className="px-6 pt-10 pb-6 space-y-6">
                 <div className="text-center">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">{node.hostname}</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1 mt-1">
-                        <span className={`w-2 h-2 rounded-full ${node.is_active ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                        {node.is_active ? 'Active' : 'Inactive'} • {node.node_type}
-                    </p>
+                    {node.original_hostname && node.original_hostname !== node.hostname && (
+                        <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5">
+                            (was: {node.original_hostname})
+                        </p>
+                    )}
+                    <div className="flex items-center justify-center gap-2 mt-2">
+                        {node.role && node.role !== 'unknown' && (
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${getRoleBadgeStyle(node.role).bg} ${getRoleBadgeStyle(node.role).text} ${getRoleBadgeStyle(node.role).border}`}>
+                                {node.role}
+                            </span>
+                        )}
+                        <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                            <span className={`w-2 h-2 rounded-full ${node.is_active ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                            {node.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="space-y-4">
@@ -56,6 +69,20 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ node, onClose, onSetSource,
                             <p className="text-gray-700 dark:text-gray-200 font-medium">{node.country}</p>
                         </div>
                     </div>
+
+                    {(node.city || node.site) && (
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/50">
+                            <Building2 className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
+                            <div className="flex-1">
+                                <p className="text-xs text-gray-500 uppercase font-semibold">Location</p>
+                                <p className="text-gray-700 dark:text-gray-200 font-medium">
+                                    {node.city && <span className="uppercase">{node.city}</span>}
+                                    {node.city && node.site && <span className="text-gray-400 mx-1">/</span>}
+                                    {node.site && <span className="uppercase">{node.site}</span>}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/50">
                         <Network className="w-5 h-5 text-purple-500 dark:text-purple-400" />

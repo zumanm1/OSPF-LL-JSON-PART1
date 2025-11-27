@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-11-27T23:04:02.929Z",
+  "passed": [
+    {
+      "category": "Link Selection",
+      "description": "Link click shows details"
+    },
+    {
+      "category": "Simulation",
+      "description": "Simulation mode banner appears when activated"
+    },
+    {
+      "category": "Link Edit",
+      "description": "Link edit panel appears in simulation mode"
+    },
+    {
+      "category": "Link Edit",
+      "description": "Cost input fields exist"
+    },
+    {
+      "category": "Country Filter",
+      "description": "Country toggle changes visible nodes"
+    },
+    {
+      "category": "Pair Modal",
+      "description": "Pair Countries modal shows country data"
+    },
+    {
+      "category": "Export",
+      "description": "Export Topology button is clickable"
+    }
+  ],
+  "bugs": [
+    {
+      "category": "Node Selection",
+      "description": "Node click does not open details panel",
+      "details": null
+    },
+    {
+      "category": "Path Analysis",
+      "description": "Find Path button not clickable",
+      "details": null
+    },
+    {
+      "category": "Theme",
+      "description": "Theme toggle not working: {\"toggled\":false,\"initial\":true,\"after\":true}",
+      "details": null
+    }
+  ]
+}

@@ -1,13 +1,15 @@
 import React, { useRef } from 'react';
 import { Upload, FileJson, Terminal } from 'lucide-react';
-import { NetworkData } from '../types';
+import { NetworkData, HostnameMappingConfig } from '../types';
 import { parsePyATSData } from '../utils/parser';
+import { applyHostnameMappings, detectRoleFromHostname, parseHostname } from '../utils/hostnameMapper';
 
 interface FileUploadProps {
   onDataLoaded: (data: NetworkData) => void;
+  hostnameMappingConfig?: HostnameMappingConfig;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingConfig }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,6 +123,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded }) => {
         } else {
           alert("Invalid JSON structure. Must contain a 'nodes' array or 'files' array (PyATS).");
           return;
+        }
+
+        // Apply hostname mappings if configured
+        if (hostnameMappingConfig && hostnameMappingConfig.mappings.length > 0) {
+          processedData.nodes = applyHostnameMappings(processedData.nodes, hostnameMappingConfig);
+        } else {
+          // Auto-detect roles from hostnames even without explicit mapping
+          processedData.nodes = processedData.nodes.map(node => {
+            const parsed = parseHostname(node.hostname);
+            const role = detectRoleFromHostname(node.hostname);
+            return {
+              ...node,
+              role: role !== 'unknown' ? role : node.role,
+              city: parsed.city || node.city,
+              site: parsed.site || node.site,
+            };
+          });
         }
 
         onDataLoaded(processedData);

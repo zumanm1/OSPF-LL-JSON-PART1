@@ -1,0 +1,307 @@
+{
+  "nodes": [
+    {"id": "R1-US-NYC", "name": "R1-US-NYC", "hostname": "us-nyc-core-r1", "loopback_ip": "10.0.1.1", "country": "USA", "is_active": true, "node_type": "core_router"},
+    {"id": "R2-US-LAX", "name": "R2-US-LAX", "hostname": "us-lax-core-r2", "loopback_ip": "10.0.1.2", "country": "USA", "is_active": true, "node_type": "core_router"},
+    {"id": "R3-US-CHI", "name": "R3-US-CHI", "hostname": "us-chi-edge-r3", "loopback_ip": "10.0.1.3", "country": "USA", "is_active": true, "node_type": "edge_router"},
+    {"id": "R4-UK-LON", "name": "R4-UK-LON", "hostname": "uk-lon-core-r4", "loopback_ip": "10.0.2.1", "country": "GBR", "is_active": true, "node_type": "core_router"},
+    {"id": "R5-UK-MAN", "name": "R5-UK-MAN", "hostname": "uk-man-edge-r5", "loopback_ip": "10.0.2.2", "country": "GBR", "is_active": true, "node_type": "edge_router"},
+    {"id": "R6-DE-FRA", "name": "R6-DE-FRA", "hostname": "de-fra-core-r6", "loopback_ip": "10.0.3.1", "country": "DEU", "is_active": true, "node_type": "core_router"},
+    {"id": "R7-DE-BER", "name": "R7-DE-BER", "hostname": "de-ber-edge-r7", "loopback_ip": "10.0.3.2", "country": "DEU", "is_active": true, "node_type": "edge_router"},
+    {"id": "R8-FR-PAR", "name": "R8-FR-PAR", "hostname": "fr-par-core-r8", "loopback_ip": "10.0.4.1", "country": "FRA", "is_active": true, "node_type": "core_router"},
+    {"id": "R9-NL-AMS", "name": "R9-NL-AMS", "hostname": "nl-ams-hub-r9", "loopback_ip": "10.0.5.1", "country": "NLD", "is_active": true, "node_type": "transit_hub"},
+    {"id": "R10-JP-TKY", "name": "R10-JP-TKY", "hostname": "jp-tky-core-r10", "loopback_ip": "10.0.6.1", "country": "JPN", "is_active": true, "node_type": "core_router"},
+    {"id": "R11-JP-OSA", "name": "R11-JP-OSA", "hostname": "jp-osa-edge-r11", "loopback_ip": "10.0.6.2", "country": "JPN", "is_active": true, "node_type": "edge_router"},
+    {"id": "R12-SG-SIN", "name": "R12-SG-SIN", "hostname": "sg-sin-hub-r12", "loopback_ip": "10.0.7.1", "country": "SGP", "is_active": true, "node_type": "transit_hub"},
+    {"id": "R13-AU-SYD", "name": "R13-AU-SYD", "hostname": "au-syd-core-r13", "loopback_ip": "10.0.8.1", "country": "AUS", "is_active": true, "node_type": "core_router"},
+    {"id": "R14-AU-MEL", "name": "R14-AU-MEL", "hostname": "au-mel-edge-r14", "loopback_ip": "10.0.8.2", "country": "AUS", "is_active": true, "node_type": "edge_router"},
+    {"id": "R15-BR-SAO", "name": "R15-BR-SAO", "hostname": "br-sao-core-r15", "loopback_ip": "10.0.9.1", "country": "BRA", "is_active": true, "node_type": "core_router"},
+    {"id": "R16-ZA-JNB", "name": "R16-ZA-JNB", "hostname": "za-jnb-core-r16", "loopback_ip": "10.0.10.1", "country": "ZAF", "is_active": true, "node_type": "core_router"},
+    {"id": "R17-IN-MUM", "name": "R17-IN-MUM", "hostname": "in-mum-core-r17", "loopback_ip": "10.0.11.1", "country": "IND", "is_active": true, "node_type": "core_router"},
+    {"id": "R18-AE-DXB", "name": "R18-AE-DXB", "hostname": "ae-dxb-hub-r18", "loopback_ip": "10.0.12.1", "country": "ARE", "is_active": true, "node_type": "transit_hub"}
+  ],
+  "links": [
+    {
+      "source": "R1-US-NYC", "target": "R2-US-LAX",
+      "source_interface": "Bundle-Ether100", "target_interface": "Bundle-Ether100",
+      "forward_cost": 50, "reverse_cost": 50, "cost": 50, "status": "up", "edge_type": "backbone",
+      "source_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 4, "member_speed": "100G", "total_capacity_mbps": 400000},
+      "target_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 4, "member_speed": "100G", "total_capacity_mbps": 400000},
+      "traffic": {"forward_traffic_mbps": 180000, "forward_utilization_pct": 45, "reverse_traffic_mbps": 220000, "reverse_utilization_pct": 55}
+    },
+    {
+      "source": "R1-US-NYC", "target": "R3-US-CHI",
+      "source_interface": "HundredGigE0/0/0/1", "target_interface": "HundredGigE0/0/0/1",
+      "forward_cost": 30, "reverse_cost": 30, "cost": 30, "status": "up", "edge_type": "backbone",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 25000, "forward_utilization_pct": 25, "reverse_traffic_mbps": 30000, "reverse_utilization_pct": 30}
+    },
+    {
+      "source": "R2-US-LAX", "target": "R3-US-CHI",
+      "source_interface": "TenGigE0/0/0/5", "target_interface": "TenGigE0/0/0/5",
+      "forward_cost": 40, "reverse_cost": 40, "cost": 40, "status": "up", "edge_type": "backbone",
+      "source_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 7500, "forward_utilization_pct": 75, "reverse_traffic_mbps": 6000, "reverse_utilization_pct": 60}
+    },
+    {
+      "source": "R1-US-NYC", "target": "R4-UK-LON",
+      "source_interface": "Bundle-Ether200", "target_interface": "Bundle-Ether200",
+      "forward_cost": 100, "reverse_cost": 120, "cost": 100, "is_asymmetric": true, "status": "up", "edge_type": "transatlantic",
+      "source_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 2, "member_speed": "100G", "total_capacity_mbps": 200000},
+      "target_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 2, "member_speed": "100G", "total_capacity_mbps": 200000},
+      "traffic": {"forward_traffic_mbps": 170000, "forward_utilization_pct": 85, "reverse_traffic_mbps": 140000, "reverse_utilization_pct": 70, "peak_forward_mbps": 190000, "peak_reverse_mbps": 165000}
+    },
+    {
+      "source": "R4-UK-LON", "target": "R5-UK-MAN",
+      "source_interface": "TenGigE0/0/0/1", "target_interface": "TenGigE0/0/0/1",
+      "forward_cost": 20, "reverse_cost": 20, "cost": 20, "status": "up", "edge_type": "domestic",
+      "source_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 4500, "forward_utilization_pct": 45, "reverse_traffic_mbps": 3800, "reverse_utilization_pct": 38}
+    },
+    {
+      "source": "R4-UK-LON", "target": "R6-DE-FRA",
+      "source_interface": "HundredGigE0/0/0/2", "target_interface": "HundredGigE0/0/0/2",
+      "forward_cost": 40, "reverse_cost": 35, "cost": 40, "is_asymmetric": true, "status": "up", "edge_type": "european",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 65000, "forward_utilization_pct": 65, "reverse_traffic_mbps": 72000, "reverse_utilization_pct": 72}
+    },
+    {
+      "source": "R4-UK-LON", "target": "R9-NL-AMS",
+      "source_interface": "HundredGigE0/0/0/3", "target_interface": "HundredGigE0/0/0/1",
+      "forward_cost": 25, "reverse_cost": 25, "cost": 25, "status": "up", "edge_type": "european",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 88000, "forward_utilization_pct": 88, "reverse_traffic_mbps": 75000, "reverse_utilization_pct": 75, "peak_forward_mbps": 98000, "peak_reverse_mbps": 92000}
+    },
+    {
+      "source": "R6-DE-FRA", "target": "R7-DE-BER",
+      "source_interface": "TenGigE0/0/0/2", "target_interface": "TenGigE0/0/0/2",
+      "forward_cost": 25, "reverse_cost": 25, "cost": 25, "status": "up", "edge_type": "domestic",
+      "source_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 3200, "forward_utilization_pct": 32, "reverse_traffic_mbps": 2800, "reverse_utilization_pct": 28}
+    },
+    {
+      "source": "R6-DE-FRA", "target": "R9-NL-AMS",
+      "source_interface": "Bundle-Ether50", "target_interface": "Bundle-Ether50",
+      "forward_cost": 30, "reverse_cost": 30, "cost": 30, "status": "up", "edge_type": "european",
+      "source_capacity": {"speed": "10G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 4, "member_speed": "10G", "total_capacity_mbps": 40000},
+      "target_capacity": {"speed": "10G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 4, "member_speed": "10G", "total_capacity_mbps": 40000},
+      "traffic": {"forward_traffic_mbps": 28000, "forward_utilization_pct": 70, "reverse_traffic_mbps": 32000, "reverse_utilization_pct": 80}
+    },
+    {
+      "source": "R6-DE-FRA", "target": "R8-FR-PAR",
+      "source_interface": "HundredGigE0/0/0/3", "target_interface": "HundredGigE0/0/0/1",
+      "forward_cost": 35, "reverse_cost": 35, "cost": 35, "status": "up", "edge_type": "european",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 45000, "forward_utilization_pct": 45, "reverse_traffic_mbps": 52000, "reverse_utilization_pct": 52}
+    },
+    {
+      "source": "R8-FR-PAR", "target": "R9-NL-AMS",
+      "source_interface": "TenGigE0/0/0/3", "target_interface": "TenGigE0/0/0/3",
+      "forward_cost": 45, "reverse_cost": 45, "cost": 45, "status": "up", "edge_type": "european",
+      "source_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 9200, "forward_utilization_pct": 92, "reverse_traffic_mbps": 8500, "reverse_utilization_pct": 85, "peak_forward_mbps": 9800, "peak_reverse_mbps": 9500}
+    },
+    {
+      "source": "R9-NL-AMS", "target": "R1-US-NYC",
+      "source_interface": "Bundle-Ether300", "target_interface": "Bundle-Ether300",
+      "forward_cost": 110, "reverse_cost": 105, "cost": 110, "is_asymmetric": true, "status": "up", "edge_type": "transatlantic",
+      "source_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 2, "member_speed": "100G", "total_capacity_mbps": 200000},
+      "target_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 2, "member_speed": "100G", "total_capacity_mbps": 200000},
+      "traffic": {"forward_traffic_mbps": 95000, "forward_utilization_pct": 47.5, "reverse_traffic_mbps": 110000, "reverse_utilization_pct": 55}
+    },
+    {
+      "source": "R2-US-LAX", "target": "R10-JP-TKY",
+      "source_interface": "Bundle-Ether400", "target_interface": "Bundle-Ether400",
+      "forward_cost": 150, "reverse_cost": 160, "cost": 150, "is_asymmetric": true, "status": "up", "edge_type": "transpacific",
+      "source_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 2, "member_speed": "100G", "total_capacity_mbps": 200000},
+      "target_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 2, "member_speed": "100G", "total_capacity_mbps": 200000},
+      "traffic": {"forward_traffic_mbps": 125000, "forward_utilization_pct": 62.5, "reverse_traffic_mbps": 145000, "reverse_utilization_pct": 72.5}
+    },
+    {
+      "source": "R10-JP-TKY", "target": "R11-JP-OSA",
+      "source_interface": "TenGigE0/0/0/1", "target_interface": "TenGigE0/0/0/1",
+      "forward_cost": 15, "reverse_cost": 15, "cost": 15, "status": "up", "edge_type": "domestic",
+      "source_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 5500, "forward_utilization_pct": 55, "reverse_traffic_mbps": 4800, "reverse_utilization_pct": 48}
+    },
+    {
+      "source": "R10-JP-TKY", "target": "R12-SG-SIN",
+      "source_interface": "HundredGigE0/0/0/2", "target_interface": "HundredGigE0/0/0/2",
+      "forward_cost": 80, "reverse_cost": 85, "cost": 80, "is_asymmetric": true, "status": "up", "edge_type": "asian",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 78000, "forward_utilization_pct": 78, "reverse_traffic_mbps": 82000, "reverse_utilization_pct": 82}
+    },
+    {
+      "source": "R12-SG-SIN", "target": "R13-AU-SYD",
+      "source_interface": "HundredGigE0/0/0/3", "target_interface": "HundredGigE0/0/0/1",
+      "forward_cost": 90, "reverse_cost": 90, "cost": 90, "status": "up", "edge_type": "submarine",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 35000, "forward_utilization_pct": 35, "reverse_traffic_mbps": 42000, "reverse_utilization_pct": 42}
+    },
+    {
+      "source": "R13-AU-SYD", "target": "R14-AU-MEL",
+      "source_interface": "TenGigE0/0/0/2", "target_interface": "TenGigE0/0/0/1",
+      "forward_cost": 20, "reverse_cost": 20, "cost": 20, "status": "up", "edge_type": "domestic",
+      "source_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 6200, "forward_utilization_pct": 62, "reverse_traffic_mbps": 5800, "reverse_utilization_pct": 58}
+    },
+    {
+      "source": "R12-SG-SIN", "target": "R17-IN-MUM",
+      "source_interface": "HundredGigE0/0/0/4", "target_interface": "HundredGigE0/0/0/1",
+      "forward_cost": 70, "reverse_cost": 75, "cost": 70, "is_asymmetric": true, "status": "up", "edge_type": "asian",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 42000, "forward_utilization_pct": 42, "reverse_traffic_mbps": 38000, "reverse_utilization_pct": 38}
+    },
+    {
+      "source": "R17-IN-MUM", "target": "R18-AE-DXB",
+      "source_interface": "HundredGigE0/0/0/2", "target_interface": "HundredGigE0/0/0/1",
+      "forward_cost": 55, "reverse_cost": 55, "cost": 55, "status": "up", "edge_type": "middle_east",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 72000, "forward_utilization_pct": 72, "reverse_traffic_mbps": 68000, "reverse_utilization_pct": 68}
+    },
+    {
+      "source": "R18-AE-DXB", "target": "R4-UK-LON",
+      "source_interface": "Bundle-Ether600", "target_interface": "Bundle-Ether600",
+      "forward_cost": 95, "reverse_cost": 100, "cost": 95, "is_asymmetric": true, "status": "up", "edge_type": "intercontinental",
+      "source_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 2, "member_speed": "100G", "total_capacity_mbps": 200000},
+      "target_capacity": {"speed": "100G", "is_bundle": true, "bundle_type": "bundle-ethernet", "member_count": 2, "member_speed": "100G", "total_capacity_mbps": 200000},
+      "traffic": {"forward_traffic_mbps": 158000, "forward_utilization_pct": 79, "reverse_traffic_mbps": 165000, "reverse_utilization_pct": 82.5, "peak_forward_mbps": 185000, "peak_reverse_mbps": 192000}
+    },
+    {
+      "source": "R18-AE-DXB", "target": "R16-ZA-JNB",
+      "source_interface": "HundredGigE0/0/0/3", "target_interface": "HundredGigE0/0/0/1",
+      "forward_cost": 120, "reverse_cost": 125, "cost": 120, "is_asymmetric": true, "status": "up", "edge_type": "african",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 28000, "forward_utilization_pct": 28, "reverse_traffic_mbps": 32000, "reverse_utilization_pct": 32}
+    },
+    {
+      "source": "R1-US-NYC", "target": "R15-BR-SAO",
+      "source_interface": "HundredGigE0/0/0/4", "target_interface": "HundredGigE0/0/0/1",
+      "forward_cost": 130, "reverse_cost": 135, "cost": 130, "is_asymmetric": true, "status": "up", "edge_type": "americas",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 48000, "forward_utilization_pct": 48, "reverse_traffic_mbps": 52000, "reverse_utilization_pct": 52}
+    },
+    {
+      "source": "R15-BR-SAO", "target": "R16-ZA-JNB",
+      "source_interface": "TenGigE0/0/0/1.100", "target_interface": "TenGigE0/0/0/1.100",
+      "forward_cost": 200, "reverse_cost": 200, "cost": 200, "status": "up", "edge_type": "south_atlantic",
+      "source_capacity": {"speed": "10G", "is_subinterface": true, "vlan_id": 100, "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "is_subinterface": true, "vlan_id": 100, "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 8500, "forward_utilization_pct": 85, "reverse_traffic_mbps": 7800, "reverse_utilization_pct": 78}
+    },
+    {
+      "source": "R8-FR-PAR", "target": "R15-BR-SAO",
+      "source_interface": "HundredGigE0/0/0/5", "target_interface": "HundredGigE0/0/0/2",
+      "forward_cost": 180, "reverse_cost": 175, "cost": 180, "is_asymmetric": true, "status": "up", "edge_type": "transatlantic",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 22000, "forward_utilization_pct": 22, "reverse_traffic_mbps": 28000, "reverse_utilization_pct": 28}
+    },
+    {
+      "source": "R6-DE-FRA", "target": "R18-AE-DXB",
+      "source_interface": "HundredGigE0/0/0/6", "target_interface": "HundredGigE0/0/0/4",
+      "forward_cost": 85, "reverse_cost": 90, "cost": 85, "is_asymmetric": true, "status": "up", "edge_type": "intercontinental",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 55000, "forward_utilization_pct": 55, "reverse_traffic_mbps": 62000, "reverse_utilization_pct": 62}
+    },
+    {
+      "source": "R5-UK-MAN", "target": "R7-DE-BER",
+      "source_interface": "TenGigE0/0/0/2", "target_interface": "TenGigE0/0/0/3",
+      "forward_cost": 60, "reverse_cost": 65, "cost": 60, "is_asymmetric": true, "status": "up", "edge_type": "european",
+      "source_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 4200, "forward_utilization_pct": 42, "reverse_traffic_mbps": 3800, "reverse_utilization_pct": 38}
+    },
+    {
+      "source": "R2-US-LAX", "target": "R12-SG-SIN",
+      "source_interface": "HundredGigE0/0/0/5", "target_interface": "HundredGigE0/0/0/5",
+      "forward_cost": 200, "reverse_cost": 195, "cost": 200, "is_asymmetric": true, "status": "up", "edge_type": "transpacific",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 38000, "forward_utilization_pct": 38, "reverse_traffic_mbps": 45000, "reverse_utilization_pct": 45}
+    },
+    {
+      "source": "R11-JP-OSA", "target": "R12-SG-SIN",
+      "source_interface": "TenGigE0/0/0/2", "target_interface": "TenGigE0/0/0/4",
+      "forward_cost": 75, "reverse_cost": 75, "cost": 75, "status": "up", "edge_type": "asian",
+      "source_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 8800, "forward_utilization_pct": 88, "reverse_traffic_mbps": 9200, "reverse_utilization_pct": 92, "peak_forward_mbps": 9600, "peak_reverse_mbps": 9800}
+    },
+    {
+      "source": "R13-AU-SYD", "target": "R2-US-LAX",
+      "source_interface": "HundredGigE0/0/0/2", "target_interface": "HundredGigE0/0/0/6",
+      "forward_cost": 180, "reverse_cost": 185, "cost": 180, "is_asymmetric": true, "status": "up", "edge_type": "transpacific",
+      "source_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "target_capacity": {"speed": "100G", "total_capacity_mbps": 100000},
+      "traffic": {"forward_traffic_mbps": 55000, "forward_utilization_pct": 55, "reverse_traffic_mbps": 62000, "reverse_utilization_pct": 62}
+    },
+    {
+      "source": "R9-NL-AMS", "target": "R6-DE-FRA",
+      "source_interface": "TenGigE0/0/0/5", "target_interface": "TenGigE0/0/0/5",
+      "forward_cost": 10000, "reverse_cost": 10000, "cost": 10000, "status": "down", "edge_type": "backup",
+      "source_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "target_capacity": {"speed": "10G", "total_capacity_mbps": 10000},
+      "traffic": {"forward_traffic_mbps": 0, "forward_utilization_pct": 0, "reverse_traffic_mbps": 0, "reverse_utilization_pct": 0}
+    }
+  ],
+  "metadata": {
+    "export_timestamp": "2025-11-25T12:00:00Z",
+    "node_count": 18,
+    "edge_count": 30,
+    "layout_algorithm": "force_directed",
+    "data_source": "Global WAN Test Topology v2",
+    "snapshot_id": 1001,
+    "snapshot_timestamp": "2025-11-25T12:00:00Z",
+    "description": "Comprehensive test topology with capacity planning and traffic utilization data"
+  },
+  "traffic_snapshots": [
+    {
+      "snapshot_id": "baseline",
+      "snapshot_name": "Baseline Traffic (Off-Peak)",
+      "timestamp": "2025-11-25T04:00:00Z",
+      "link_traffic": {
+        "0": {"forward_traffic_mbps": 120000, "forward_utilization_pct": 30, "reverse_traffic_mbps": 140000, "reverse_utilization_pct": 35},
+        "3": {"forward_traffic_mbps": 100000, "forward_utilization_pct": 50, "reverse_traffic_mbps": 90000, "reverse_utilization_pct": 45},
+        "6": {"forward_traffic_mbps": 50000, "forward_utilization_pct": 50, "reverse_traffic_mbps": 45000, "reverse_utilization_pct": 45}
+      }
+    },
+    {
+      "snapshot_id": "peak",
+      "snapshot_name": "Peak Traffic (Business Hours)",
+      "timestamp": "2025-11-25T14:00:00Z",
+      "link_traffic": {
+        "0": {"forward_traffic_mbps": 350000, "forward_utilization_pct": 87.5, "reverse_traffic_mbps": 380000, "reverse_utilization_pct": 95},
+        "3": {"forward_traffic_mbps": 190000, "forward_utilization_pct": 95, "reverse_traffic_mbps": 185000, "reverse_utilization_pct": 92.5},
+        "6": {"forward_traffic_mbps": 95000, "forward_utilization_pct": 95, "reverse_traffic_mbps": 92000, "reverse_utilization_pct": 92},
+        "10": {"forward_traffic_mbps": 9800, "forward_utilization_pct": 98, "reverse_traffic_mbps": 9500, "reverse_utilization_pct": 95}
+      }
+    },
+    {
+      "snapshot_id": "maintenance",
+      "snapshot_name": "During Maintenance Window",
+      "timestamp": "2025-11-25T02:00:00Z",
+      "link_traffic": {
+        "0": {"forward_traffic_mbps": 80000, "forward_utilization_pct": 20, "reverse_traffic_mbps": 75000, "reverse_utilization_pct": 18.75},
+        "3": {"forward_traffic_mbps": 60000, "forward_utilization_pct": 30, "reverse_traffic_mbps": 55000, "reverse_utilization_pct": 27.5}
+      }
+    }
+  ],
+  "current_snapshot_id": "baseline"
+}

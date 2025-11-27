@@ -72,7 +72,9 @@ app.use(localhostOnly);
 // ============================================================================
 app.use(express.json());
 app.use(cors({
-  origin: ['http://localhost:9040', 'http://127.0.0.1:9040'],
+  origin: [
+    'http://localhost:9040', 'http://127.0.0.1:9040'
+  ],
   credentials: true
 }));
 

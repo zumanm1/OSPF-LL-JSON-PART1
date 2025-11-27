@@ -55,18 +55,17 @@ check_port() {
 
 # Check if already running
 ALREADY_RUNNING=0
-for PORT in 9040 9041 9042; do
+for PORT in 9040 9041; do
     if [ -n "$(check_port $PORT)" ]; then
         ALREADY_RUNNING=$((ALREADY_RUNNING + 1))
     fi
 done
 
-if [ $ALREADY_RUNNING -eq 3 ]; then
+if [ $ALREADY_RUNNING -eq 2 ]; then
     echo -e "${YELLOW}NetViz Pro is already running!${NC}"
     echo ""
-    echo "  Gateway:  http://localhost:9040"
+    echo "  App:      http://localhost:9040"
     echo "  Auth API: http://127.0.0.1:9041"
-    echo "  Vite:     http://127.0.0.1:9042"
     echo ""
     echo "  Use ./stop.sh to stop, or ./restart.sh to restart"
     exit 0
@@ -86,11 +85,10 @@ MAX_WAIT=30
 printf "  Waiting: ["
 
 while [ $WAIT_TIME -lt $MAX_WAIT ]; do
-    GATEWAY=$(check_port 9040)
+    APP=$(check_port 9040)
     AUTH=$(check_port 9041)
-    VITE=$(check_port 9042)
 
-    if [ -n "$GATEWAY" ] && [ -n "$AUTH" ] && [ -n "$VITE" ]; then
+    if [ -n "$APP" ] && [ -n "$AUTH" ]; then
         break
     fi
 
@@ -105,10 +103,10 @@ echo ""
 SERVICES_UP=0
 
 if [ -n "$(check_port 9040)" ]; then
-    echo -e "  ${GREEN}✓${NC} Gateway (9040) running"
+    echo -e "  ${GREEN}✓${NC} App (9040) running"
     SERVICES_UP=$((SERVICES_UP + 1))
 else
-    echo -e "  ${RED}✗${NC} Gateway (9040) not running"
+    echo -e "  ${RED}✗${NC} App (9040) not running"
 fi
 
 if [ -n "$(check_port 9041)" ]; then
@@ -118,22 +116,15 @@ else
     echo -e "  ${RED}✗${NC} Auth API (9041) not running"
 fi
 
-if [ -n "$(check_port 9042)" ]; then
-    echo -e "  ${GREEN}✓${NC} Vite (9042) running"
-    SERVICES_UP=$((SERVICES_UP + 1))
-else
-    echo -e "  ${RED}✗${NC} Vite (9042) not running"
-fi
-
 echo ""
 
-if [ $SERVICES_UP -eq 3 ]; then
+if [ $SERVICES_UP -eq 2 ]; then
     echo -e "${GREEN}NetViz Pro started successfully!${NC}"
     echo ""
     echo "  Access: http://localhost:9040"
     echo "  Logs:   tail -f $LOG_FILE"
 else
-    echo -e "${YELLOW}Warning: Only $SERVICES_UP/3 services running${NC}"
+    echo -e "${YELLOW}Warning: Only $SERVICES_UP/2 services running${NC}"
     echo ""
     echo "  Check logs: tail -f $LOG_FILE"
 fi

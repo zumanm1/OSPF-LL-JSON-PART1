@@ -81,7 +81,7 @@ echo -e "${YELLOW}[PHASE 1/5]${NC} Stopping any running instances..."
 echo ""
 
 STOPPED=0
-for PORT in 9040 9041 9042; do
+for PORT in 9040 9041; do
     if stop_port $PORT; then
         STOPPED=$((STOPPED + 1))
     fi
@@ -145,11 +145,10 @@ ALL_UP=false
 # Progress indicator
 printf "  ["
 while [ $WAIT_TIME -lt $MAX_WAIT ]; do
-    GATEWAY=$(check_port 9040)
+    APP=$(check_port 9040)
     AUTH=$(check_port 9041)
-    VITE=$(check_port 9042)
 
-    if [ -n "$GATEWAY" ] && [ -n "$AUTH" ] && [ -n "$VITE" ]; then
+    if [ -n "$APP" ] && [ -n "$AUTH" ]; then
         ALL_UP=true
         break
     fi
@@ -177,13 +176,13 @@ echo ""
 VALIDATION_PASSED=true
 SERVICES_UP=0
 
-# Check Gateway (port 9040)
-GATEWAY_PID=$(check_port 9040)
-if [ -n "$GATEWAY_PID" ]; then
-    echo -e "  ${GREEN}✓${NC} Gateway Server (port 9040) - RUNNING (PID: $GATEWAY_PID)"
+# Check App (port 9040)
+APP_PID=$(check_port 9040)
+if [ -n "$APP_PID" ]; then
+    echo -e "  ${GREEN}✓${NC} App Server (port 9040) - RUNNING (PID: $APP_PID)"
     SERVICES_UP=$((SERVICES_UP + 1))
 else
-    echo -e "  ${RED}✗${NC} Gateway Server (port 9040) - NOT RUNNING"
+    echo -e "  ${RED}✗${NC} App Server (port 9040) - NOT RUNNING"
     VALIDATION_PASSED=false
 fi
 
@@ -194,16 +193,6 @@ if [ -n "$AUTH_PID" ]; then
     SERVICES_UP=$((SERVICES_UP + 1))
 else
     echo -e "  ${RED}✗${NC} Auth Server (port 9041) - NOT RUNNING"
-    VALIDATION_PASSED=false
-fi
-
-# Check Vite (port 9042)
-VITE_PID=$(check_port 9042)
-if [ -n "$VITE_PID" ]; then
-    echo -e "  ${GREEN}✓${NC} Vite Server (port 9042) - RUNNING (PID: $VITE_PID)"
-    SERVICES_UP=$((SERVICES_UP + 1))
-else
-    echo -e "  ${RED}✗${NC} Vite Server (port 9042) - NOT RUNNING"
     VALIDATION_PASSED=false
 fi
 
@@ -278,9 +267,8 @@ if [ "$VALIDATION_PASSED" = true ]; then
     echo "  └─────────────────────────────────────────────────────────────┘"
     echo ""
     echo "  Server Architecture:"
-    echo "  ├── Gateway (public):     Port 9040"
-    echo "  ├── Auth API (localhost): Port 9041"
-    echo "  └── Vite (localhost):     Port 9042"
+    echo "  ├── App (public):         Port 9040"
+    echo "  └── Auth API (localhost): Port 9041"
     echo ""
     echo "  Useful Commands:"
     echo "  ├── View logs:  tail -f $LOG_FILE"
@@ -291,7 +279,7 @@ if [ "$VALIDATION_PASSED" = true ]; then
     exit 0
 else
     echo -e "${RED}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${RED}║     VALIDATION FAILED ($SERVICES_UP/3 services running)               ║${NC}"
+    echo -e "${RED}║     VALIDATION FAILED ($SERVICES_UP/2 services running)               ║${NC}"
     echo -e "${RED}╚══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo "  Troubleshooting:"
@@ -303,7 +291,7 @@ else
     echo "     cd $APP_DIR && npm run dev:full"
     echo ""
     echo "  3. Check if ports are blocked:"
-    echo "     lsof -i:9040,9041,9042"
+    echo "     lsof -i:9040,9041"
     echo ""
     echo "  4. Reinstall:"
     echo "     ./prep.sh"

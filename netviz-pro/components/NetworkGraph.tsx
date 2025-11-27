@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { NetworkData, NetworkNode, NetworkLink, PathResult } from '../types';
 import { COUNTRY_COLORS, NODE_RADIUS, ACTIVE_STROKE_COLOR, INACTIVE_STROKE_COLOR, LINK_COLOR_UP, LINK_COLOR_DOWN, LINK_COLOR_ASYMMETRIC } from '../constants';
 import { Minus, Plus, RefreshCw, Tag, Network } from 'lucide-react';
+import { getRoleColor } from '../utils/hostnameMapper';
 
 interface NetworkGraphProps {
   data: NetworkData;
@@ -92,13 +93,158 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect, onLinkS
       });
     svg.call(zoom);
 
+    // Calculate cluster centers based on country hierarchy
+    const countryGroups = new Map<string, NetworkNode[]>();
+    const cityGroups = new Map<string, NetworkNode[]>();
+    const siteGroups = new Map<string, NetworkNode[]>();
+    
+    filteredNodes.forEach(node => {
+      // Group by country
+      const country = node.country || 'DEFAULT';
+      if (!countryGroups.has(country)) countryGroups.set(country, []);
+      countryGroups.get(country)!.push(node);
+      
+      // Group by country-city
+      const cityKey = `${country}-${node.city || 'default'}`;
+      if (!cityGroups.has(cityKey)) cityGroups.set(cityKey, []);
+      cityGroups.get(cityKey)!.push(node);
+      
+      // Group by country-city-site
+      const siteKey = `${country}-${node.city || 'default'}-${node.site || 'default'}`;
+      if (!siteGroups.has(siteKey)) siteGroups.set(siteKey, []);
+      siteGroups.get(siteKey)!.push(node);
+    });
+
+    // Calculate cluster center positions (arrange countries in a circle)
+    const countryCenters = new Map<string, { x: number; y: number }>();
+    const countryList = Array.from(countryGroups.keys()).sort();
+    const countryRadius = Math.min(width, height) * 0.35;
+    
+    countryList.forEach((country, i) => {
+      const angle = (2 * Math.PI * i) / countryList.length - Math.PI / 2;
+      countryCenters.set(country, {
+        x: width / 2 + countryRadius * Math.cos(angle),
+        y: height / 2 + countryRadius * Math.sin(angle)
+      });
+    });
+
+    // Calculate city centers within each country cluster
+    const cityCenters = new Map<string, { x: number; y: number }>();
+    countryList.forEach(country => {
+      const countryCenter = countryCenters.get(country)!;
+      const citiesInCountry = Array.from(cityGroups.keys())
+        .filter(k => k.startsWith(`${country}-`))
+        .sort();
+      
+      const cityRadius = 60; // Distance between cities within a country
+      citiesInCountry.forEach((cityKey, i) => {
+        if (citiesInCountry.length === 1) {
+          cityCenters.set(cityKey, countryCenter);
+        } else {
+          const angle = (2 * Math.PI * i) / citiesInCountry.length;
+          cityCenters.set(cityKey, {
+            x: countryCenter.x + cityRadius * Math.cos(angle),
+            y: countryCenter.y + cityRadius * Math.sin(angle)
+          });
+        }
+      });
+    });
+
+    // Custom clustering force
+    const clusterForce = (alpha: number) => {
+      filteredNodes.forEach(node => {
+        const country = node.country || 'DEFAULT';
+        const cityKey = `${country}-${node.city || 'default'}`;
+        
+        // Get target center (prefer city center if available, else country center)
+        const target = cityCenters.get(cityKey) || countryCenters.get(country);
+        if (target && node.x !== undefined && node.y !== undefined) {
+          // Strength varies: stronger for same city/site, weaker for just country
+          const hasCity = node.city && node.city !== 'default';
+          const strength = hasCity ? 0.15 : 0.08;
+          
+          node.vx = (node.vx || 0) + (target.x - node.x) * alpha * strength;
+          node.vy = (node.vy || 0) + (target.y - node.y) * alpha * strength;
+        }
+      });
+    };
+
     const simulation = d3.forceSimulation<NetworkNode, NetworkLink>(filteredNodes)
-      .force("link", d3.forceLink<NetworkNode, NetworkLink>(filteredLinks).id(d => d.id).distance(160))
-      .force("charge", d3.forceManyBody().strength(-400))
-      .force("collide", d3.forceCollide(NODE_RADIUS * 1.5))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      .force("link", d3.forceLink<NetworkNode, NetworkLink>(filteredLinks).id(d => d.id).distance(100))
+      .force("charge", d3.forceManyBody().strength(-300))
+      .force("collide", d3.forceCollide(NODE_RADIUS * 2))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("cluster", clusterForce);
 
     simulationRef.current = simulation;
+
+    // Create cluster hulls (background shapes showing country groupings)
+    const hullGroup = g.append("g").attr("class", "cluster-hulls");
+    
+    // Helper function to compute convex hull with padding
+    const computeHull = (nodes: NetworkNode[], padding: number = 30): [number, number][] | null => {
+      if (nodes.length < 3) {
+        // For less than 3 nodes, create a circle around them
+        if (nodes.length === 0) return null;
+        const centerX = nodes.reduce((sum, n) => sum + (n.x || 0), 0) / nodes.length;
+        const centerY = nodes.reduce((sum, n) => sum + (n.y || 0), 0) / nodes.length;
+        const points: [number, number][] = [];
+        for (let i = 0; i < 8; i++) {
+          const angle = (2 * Math.PI * i) / 8;
+          points.push([centerX + padding * Math.cos(angle), centerY + padding * Math.sin(angle)]);
+        }
+        return points;
+      }
+      
+      const points: [number, number][] = nodes.map(n => [n.x || 0, n.y || 0]);
+      const hull = d3.polygonHull(points);
+      if (!hull) return null;
+      
+      // Expand hull with padding
+      const centroid = d3.polygonCentroid(hull);
+      return hull.map(point => {
+        const dx = point[0] - centroid[0];
+        const dy = point[1] - centroid[1];
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const scale = (dist + padding) / dist;
+        return [centroid[0] + dx * scale, centroid[1] + dy * scale] as [number, number];
+      });
+    };
+
+    // Create hull paths for each country
+    const countryHulls = hullGroup.selectAll("path.country-hull")
+      .data(Array.from(countryGroups.entries()))
+      .join("path")
+      .attr("class", "country-hull")
+      .attr("fill", ([country]) => {
+        const color = COUNTRY_COLORS[country] || COUNTRY_COLORS.DEFAULT;
+        return color;
+      })
+      .attr("fill-opacity", 0.08)
+      .attr("stroke", ([country]) => {
+        const color = COUNTRY_COLORS[country] || COUNTRY_COLORS.DEFAULT;
+        return color;
+      })
+      .attr("stroke-opacity", 0.3)
+      .attr("stroke-width", 2)
+      .attr("stroke-dasharray", "5,5")
+      .style("pointer-events", "none");
+
+    // Create hull labels for each country
+    const countryLabels = hullGroup.selectAll("text.country-label")
+      .data(Array.from(countryGroups.entries()))
+      .join("text")
+      .attr("class", "country-label")
+      .text(([country]) => country)
+      .attr("font-size", "14px")
+      .attr("font-weight", "bold")
+      .attr("fill", ([country]) => {
+        const color = COUNTRY_COLORS[country] || COUNTRY_COLORS.DEFAULT;
+        return color;
+      })
+      .attr("fill-opacity", 0.6)
+      .attr("text-anchor", "middle")
+      .style("pointer-events", "none");
 
     const isDimmed = (d: any) => {
       if (!highlightedPath) return false;
@@ -261,8 +407,32 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect, onLinkS
         return highlightedPath && !isDimmed(d) ? 3 : 1.5;
       });
 
+    // Role indicator (small badge above node)
+    node.filter(d => d.role && d.role !== 'unknown')
+      .append("rect")
+      .attr("x", -12)
+      .attr("y", -NODE_RADIUS - 16)
+      .attr("width", 24)
+      .attr("height", 12)
+      .attr("rx", 3)
+      .attr("fill", d => getRoleColor(d.role))
+      .attr("stroke", theme === 'dark' ? "#1f2937" : "#ffffff")
+      .attr("stroke-width", 1)
+      .style("pointer-events", "none");
+
+    node.filter(d => d.role && d.role !== 'unknown')
+      .append("text")
+      .text(d => d.role || '')
+      .attr("x", 0)
+      .attr("y", -NODE_RADIUS - 7)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "8px")
+      .attr("font-weight", "bold")
+      .attr("fill", "white")
+      .style("pointer-events", "none");
+
     node.append("text")
-      .text(d => d.id.substring(0, 3))
+      .text(d => d.role && d.role !== 'unknown' ? d.role.substring(0, 2) : d.id.substring(0, 3))
       .attr("x", 0)
       .attr("y", 4)
       .attr("text-anchor", "middle")
@@ -300,7 +470,16 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect, onLinkS
 
     node.call(drag as any);
 
-    node.append("title").text(d => `ID: ${d.id}\nHost: ${d.hostname}\nIP: ${d.loopback_ip}`);
+    node.append("title").text(d => {
+      let title = `ID: ${d.id}\nHost: ${d.hostname}\nIP: ${d.loopback_ip}`;
+      if (d.role && d.role !== 'unknown') title += `\nRole: ${d.role}`;
+      if (d.city) title += `\nCity: ${d.city.toUpperCase()}`;
+      if (d.site) title += `\nSite: ${d.site.toUpperCase()}`;
+      if (d.original_hostname && d.original_hostname !== d.hostname) {
+        title += `\nOriginal: ${d.original_hostname}`;
+      }
+      return title;
+    });
 
     simulation.on("tick", () => {
       linkLine
@@ -330,6 +509,24 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect, onLinkS
 
       node
         .attr("transform", d => `translate(${d.x},${d.y})`);
+
+      // Update cluster hulls
+      countryHulls.attr("d", ([country, nodes]) => {
+        const hull = computeHull(nodes, 40);
+        if (!hull) return "";
+        return `M${hull.map(p => p.join(",")).join("L")}Z`;
+      });
+
+      // Update country labels (position at centroid of hull)
+      countryLabels
+        .attr("x", ([country, nodes]) => {
+          const xs = nodes.map(n => n.x || 0);
+          return xs.reduce((a, b) => a + b, 0) / xs.length;
+        })
+        .attr("y", ([country, nodes]) => {
+          const ys = nodes.map(n => n.y || 0);
+          return Math.min(...ys) - 50; // Position above the cluster
+        });
     });
 
     if (svgRef.current) {
