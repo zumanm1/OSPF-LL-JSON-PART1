@@ -1,20 +1,51 @@
-# NetViz Pro - Clone & Setup Instructions (Ubuntu 24.04)
+# NetViz Pro - Clone & Setup Instructions (Ubuntu 24.04/WSL)
 
 ## GitHub Repository
 **URL**: https://github.com/zumanm1/OSPF2-LL-JSON
 
 ---
 
-## Quick Start (One Command)
+## Quick Install (2-Script Approach - Recommended)
 
-**Fresh Ubuntu/WSL (installs Node.js + everything):**
+**Assumes Node.js, npm, and git are already installed.**
+
+### Step 1: Download and Run PREP Script
 ```bash
-sudo apt update && sudo apt install -y git curl && curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt install -y nodejs && git clone https://github.com/zumanm1/OSPF2-LL-JSON.git && cd OSPF2-LL-JSON/netviz-pro && npm install && npm run dev:full
+# Download prep.sh, make executable, and run
+curl -fsSL https://raw.githubusercontent.com/zumanm1/OSPF2-LL-JSON/main/netviz-pro/prep.sh -o /tmp/prep.sh && chmod +x /tmp/prep.sh && /tmp/prep.sh
 ```
 
-**If Node.js 20.x already installed:**
+**PREP does:**
+- Validates git, node, npm versions
+- Stops services on ports 9040, 9041, 9042
+- Removes old OSPF2-LL-JSON folder
+- Clones fresh repository
+- Resets database
+- Runs npm install
+
+### Step 2: Run & Validate
 ```bash
-git clone https://github.com/zumanm1/OSPF2-LL-JSON.git && cd OSPF2-LL-JSON/netviz-pro && npm install && npm run dev:full
+cd ~/OSPF2-LL-JSON/netviz-pro && ./run.sh
+```
+
+**RUN does:**
+- Starts all 3 servers (Gateway, Auth, Vite)
+- Validates all services are running
+- Performs API health check
+- Shows access credentials
+
+---
+
+## Alternative: Single Command Install
+
+### Option A: One-Liner (Node.js Already Installed)
+```bash
+lsof -ti:9040,9041,9042 | xargs kill -9 2>/dev/null; rm -rf ~/OSPF2-LL-JSON && git clone https://github.com/zumanm1/OSPF2-LL-JSON.git ~/OSPF2-LL-JSON && cd ~/OSPF2-LL-JSON/netviz-pro && rm -f server/users.db && npm install && npm run dev:full
+```
+
+### Option B: One-Liner (Fresh System - Also Installs Node.js)
+```bash
+sudo apt update && sudo apt install -y git curl && curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt install -y nodejs && lsof -ti:9040,9041,9042 | xargs kill -9 2>/dev/null; rm -rf ~/OSPF2-LL-JSON && git clone https://github.com/zumanm1/OSPF2-LL-JSON.git ~/OSPF2-LL-JSON && cd ~/OSPF2-LL-JSON/netviz-pro && rm -f server/users.db && npm install && npm run dev:full
 ```
 
 **Default Login:** `admin` / `admin123`
@@ -27,107 +58,100 @@ NetViz Pro has three components with **server-side authentication protection**:
 
 | Component | Port | Access | Description |
 |-----------|------|--------|-------------|
-| Gateway Server | 9040 | Public | Auth gateway - blocks all access without login |
+| Gateway Server | 9040 | Public | Auth gateway - blocks ALL access without login |
 | Auth Server | 9041 | Localhost | Express API - User authentication |
-| Vite Dev Server | 9042 | Localhost | React UI (proxied through gateway) |
+| Vite Dev Server | 9042 | Localhost | React UI (proxied through gateway only) |
 
 **Security Model:**
-- Users access port 9040 (gateway)
-- Gateway shows login page until authenticated
-- After login, gateway proxies to Vite (9042)
-- Auth API (9041) is localhost-only
-- **No content is served without authentication**
+```
+User Request → Port 9040 (Gateway)
+                    ↓
+            Not logged in? → Server-side login page (no app content)
+                    ↓
+            Valid login? → Sets cookie + localStorage
+                    ↓
+            Authenticated → Proxy to Vite (9042) → Full App Access
+```
 
 ---
 
-## Step-by-Step Instructions (Ubuntu 24.04)
+## Prerequisites Check
 
-### Step 1: Install Prerequisites
+Before installing, verify your system has these requirements:
 
 ```bash
-# Update system packages
+# Check versions (run these commands)
+git --version      # Required: 2.x.x or higher
+node --version     # Required: v18.x.x or higher (v20.x recommended)
+npm --version      # Required: 8.x.x or higher (10.x recommended)
+```
+
+### Install Prerequisites (if needed)
+```bash
+# Update system
 sudo apt update && sudo apt upgrade -y
 
 # Install git and curl
 sudo apt install -y git curl
 
-# Install Node.js 20.x (LTS)
+# Install Node.js 20.x LTS
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
-
-# Verify installation
-git --version      # Should show: git version 2.x.x
-node --version     # Should show: v20.x.x
-npm --version      # Should show: 10.x.x
 ```
 
 ---
 
-### Step 2: Clone the Repository
+## Manual Installation Steps
 
+### Step 1: Stop Any Running Instances
+```bash
+# Stop processes on ports 9040, 9041, 9042
+lsof -ti:9040,9041,9042 | xargs kill -9 2>/dev/null
+echo "Ports cleared"
+```
+
+### Step 2: Remove Old Installation (if exists)
+```bash
+# Remove old installation and database
+rm -rf ~/OSPF2-LL-JSON
+echo "Old installation removed"
+```
+
+### Step 3: Clone Repository
 ```bash
 cd ~
 git clone https://github.com/zumanm1/OSPF2-LL-JSON.git
-```
-
----
-
-### Step 3: Navigate to Project
-
-```bash
 cd OSPF2-LL-JSON/netviz-pro
 ```
 
----
-
-### Step 4: Install Dependencies
-
+### Step 4: Reset Database (Fresh Start)
 ```bash
+# Remove database for fresh admin credentials
+rm -f server/users.db
+echo "Database will be recreated with default admin"
+```
+
+### Step 5: Install Dependencies
+```bash
+npm install
+
+# If npm install fails, try:
+npm cache clean --force
+rm -rf node_modules package-lock.json
 npm install
 ```
 
----
-
-### Step 5: Configure Environment (Optional)
-
-Copy the template and customize:
-
-```bash
-cp .env.temp .env.local
-```
-
-Edit `.env.local` to change:
-- `APP_SECRET_KEY` - JWT secret (generate with `openssl rand -hex 32`)
-- `APP_SESSION_TIMEOUT` - Session duration in seconds (default: 3600)
-- `APP_DEFAULT_MAX_USES` - Default login limit for new users (default: 10)
-
----
-
-### Step 6: Start the Application
-
-**Option A: Start Both Servers (Recommended)**
+### Step 6: Start Application
 ```bash
 npm run dev:full
 ```
 
-**Option B: Start Separately**
-```bash
-# Terminal 1 - Auth Server (port 9041)
-npm run server
-
-# Terminal 2 - Frontend (port 9040)
-npm run dev
-```
-
----
-
-### Step 7: Login
-
+### Step 7: Access & Login
 - **URL:** http://localhost:9040
 - **Username:** `admin`
 - **Password:** `admin123`
 
-**Important:** Change the admin password after first login!
+**IMPORTANT:** Change the admin password after first login!
 
 ---
 
@@ -135,9 +159,10 @@ npm run dev
 
 | Script | Command | Description |
 |--------|---------|-------------|
-| `dev` | `npm run dev` | Start frontend only (port 9040) |
+| `dev:full` | `npm run dev:full` | Start all 3 servers (Gateway + Auth + Vite) |
 | `server` | `npm run server` | Start auth server only (port 9041) |
-| `dev:full` | `npm run dev:full` | Start both servers |
+| `gateway` | `npm run gateway` | Start gateway only (port 9040) |
+| `dev` | `npm run dev` | Start Vite only (port 9042) |
 | `build` | `npm run build` | Build for production |
 
 ---
@@ -147,41 +172,37 @@ npm run dev
 ```bash
 cd ~/OSPF2-LL-JSON/netviz-pro
 
-# Start auth server in background
-nohup node server/index.js > /tmp/netviz-auth.log 2>&1 &
-
-# Start frontend in background
-nohup npm run dev > /tmp/netviz-frontend.log 2>&1 &
+# Start all servers in background
+nohup npm run dev:full > /tmp/netviz-pro.log 2>&1 &
 
 # Check if running
-lsof -i:9040
-lsof -i:9041
+lsof -i:9040 && lsof -i:9041 && lsof -i:9042
 
 # View logs
-tail -f /tmp/netviz-auth.log
-tail -f /tmp/netviz-frontend.log
+tail -f /tmp/netviz-pro.log
 
-# Stop both
-lsof -ti:9040 | xargs kill -9 2>/dev/null
-lsof -ti:9041 | xargs kill -9 2>/dev/null
+# Stop all servers
+lsof -ti:9040,9041,9042 | xargs kill -9 2>/dev/null
 ```
 
 ---
 
-## Firewall Configuration (Ubuntu 24.04)
+## Environment Configuration (Optional)
 
 ```bash
-# Allow frontend port
-sudo ufw allow 9040/tcp comment "NetViz Pro Frontend"
+# Copy template
+cp .env.temp .env.local
 
-# Auth server runs on localhost only - no firewall rule needed
-
-# Reload firewall
-sudo ufw reload
-
-# Verify
-sudo ufw status | grep 9040
+# Generate secure secret key
+openssl rand -hex 32
 ```
+
+Edit `.env.local`:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `APP_SECRET_KEY` | (random) | JWT signing secret |
+| `APP_SESSION_TIMEOUT` | 3600 | Session duration in seconds |
+| `APP_DEFAULT_MAX_USES` | 10 | Default login limit per user |
 
 ---
 
@@ -190,21 +211,36 @@ sudo ufw status | grep 9040
 | Feature | Description |
 |---------|-------------|
 | **Server-Side Auth** | Gateway blocks ALL content until login (not just client-side) |
-| Localhost Auth | Auth API only accessible from 127.0.0.1 |
-| Password Hashing | bcrypt with salt rounds |
-| JWT Tokens | Session-based authentication with cookies |
-| Usage Limits | Configurable login limits per user |
-| Admin Panel | User management (admin only) |
-| Protected Proxy | Vite server only accessible via authenticated gateway |
+| **Localhost Auth API** | Auth API only accessible from 127.0.0.1 |
+| **Protected Proxy** | Vite server only accessible via authenticated gateway |
+| **Password Hashing** | bcrypt with salt rounds |
+| **JWT Tokens** | Session-based authentication with cookies |
+| **Usage Limits** | Configurable login limits per user |
+| **Admin Panel** | User management (admin only) |
 
 ---
 
-## User Management (Admin Only)
+## Firewall Configuration
+
+```bash
+# Allow gateway port (public access)
+sudo ufw allow 9040/tcp comment "NetViz Pro Gateway"
+
+# Auth server and Vite are localhost-only - no firewall rule needed
+sudo ufw reload
+
+# Verify
+sudo ufw status | grep 9040
+```
+
+---
+
+## User Management (Admin Panel)
 
 After logging in as admin:
-1. Click on username in top-right
+1. Click username in top-right corner
 2. Select "Admin Panel"
-3. Features available:
+3. Available actions:
    - Create new users
    - Reset passwords
    - Reset usage counters
@@ -219,94 +255,31 @@ After logging in as admin:
 cd ~/OSPF2-LL-JSON
 
 # Stop running servers
-lsof -ti:9040 | xargs kill -9 2>/dev/null
-lsof -ti:9041 | xargs kill -9 2>/dev/null
+lsof -ti:9040,9041,9042 | xargs kill -9 2>/dev/null
 
-# Pull latest
+# Pull latest code
 git pull origin main
 
 # Reinstall dependencies
 cd netviz-pro
 npm install
 
-# Start
+# Restart
 npm run dev:full
 ```
 
 ---
 
-## Complete Setup Script (Ubuntu 24.04)
-
-Save as `setup_netviz.sh`:
+## Fresh Reinstall (Complete Reset)
 
 ```bash
-#!/bin/bash
-# NetViz Pro - Ubuntu 24.04 Setup Script
-
-set -e
-
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║           NetViz Pro Setup (Ubuntu 24.04)                    ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
-
-# Install prerequisites
-echo "[1/6] Installing prerequisites..."
-sudo apt update
-sudo apt install -y git curl
-
-# Install Node.js 20.x
-if ! command -v node &> /dev/null; then
-    echo "[2/6] Installing Node.js 20.x..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt install -y nodejs
-else
-    echo "[2/6] Node.js already installed"
-fi
-
-echo "  Git: $(git --version)"
-echo "  Node: $(node --version)"
-echo "  NPM: $(npm --version)"
-
-# Clone repository
-echo "[3/6] Cloning repository..."
-cd ~
-rm -rf OSPF2-LL-JSON 2>/dev/null || true
-git clone https://github.com/zumanm1/OSPF2-LL-JSON.git
-
-# Install dependencies
-echo "[4/6] Installing dependencies..."
-cd OSPF2-LL-JSON/netviz-pro
-npm install
-
-# Configure firewall
-echo "[5/6] Configuring firewall..."
-sudo ufw allow 9040/tcp comment "NetViz Pro Frontend" 2>/dev/null || true
-
-# Start application
-echo "[6/6] Starting application..."
-echo ""
-echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║  Starting NetViz Pro...                                      ║"
-echo "║  Frontend: http://localhost:9040                             ║"
-echo "║  Auth API: http://127.0.0.1:9041 (localhost only)            ║"
-echo "║                                                              ║"
-echo "║  Default Login: admin / admin123                             ║"
-echo "║  (Change password after first login!)                        ║"
-echo "╚══════════════════════════════════════════════════════════════╝"
-echo ""
-
-npm run dev:full
-```
-
-Run the script:
-```bash
-chmod +x setup_netviz.sh
-./setup_netviz.sh
+# Stop, remove, clone, install, start - all in one
+lsof -ti:9040,9041,9042 | xargs kill -9 2>/dev/null; rm -rf ~/OSPF2-LL-JSON && git clone https://github.com/zumanm1/OSPF2-LL-JSON.git ~/OSPF2-LL-JSON && cd ~/OSPF2-LL-JSON/netviz-pro && rm -f server/users.db && npm install && npm run dev:full
 ```
 
 ---
 
-## Troubleshooting (Ubuntu 24.04)
+## Troubleshooting
 
 ### npm install fails
 ```bash
@@ -317,40 +290,37 @@ npm install
 
 ### Port already in use
 ```bash
-# Kill processes on both ports
-lsof -ti:9040 | xargs kill -9 2>/dev/null
-lsof -ti:9041 | xargs kill -9 2>/dev/null
+lsof -ti:9040,9041,9042 | xargs kill -9 2>/dev/null
 npm run dev:full
 ```
 
 ### Cannot access from other machine
 ```bash
-# Check firewall status
+# Check firewall
 sudo ufw status
 
-# Add port 9040 (frontend)
+# Allow port 9040
 sudo ufw allow 9040/tcp
+sudo ufw reload
 
-# Verify app is listening
+# Verify servers are running
 lsof -i:9040
-```
-
-### Auth server not starting
-```bash
-# Check if port 9041 is in use
-lsof -i:9041
-
-# Start auth server manually to see errors
-node server/index.js
 ```
 
 ### Login fails with "Auth server not available"
 ```bash
-# Ensure auth server is running
+# Check auth server health
 curl http://127.0.0.1:9041/api/health
 
-# If not running, start it
+# If not running, start manually
 node server/index.js &
+```
+
+### Database reset (clear all users)
+```bash
+rm -f server/users.db
+# Restart - default admin will be recreated
+npm run dev:full
 ```
 
 ### Permission denied errors
@@ -359,27 +329,20 @@ sudo chown -R $(whoami) ~/.npm
 npm install
 ```
 
-### Database reset (clear all users)
-```bash
-rm -f server/users.db
-# Restart auth server - default admin will be recreated
-```
-
 ---
 
 ## Quick Reference
 
 | Action | Command |
 |--------|---------|
+| Fresh Install | `curl -fsSL https://raw.githubusercontent.com/zumanm1/OSPF2-LL-JSON/main/netviz-pro/install.sh \| bash` |
 | Clone | `git clone https://github.com/zumanm1/OSPF2-LL-JSON.git` |
 | Install | `cd OSPF2-LL-JSON/netviz-pro && npm install` |
-| Run Both | `npm run dev:full` |
-| Run Frontend | `npm run dev` |
-| Run Auth | `npm run server` |
+| Start All | `npm run dev:full` |
 | Background | `nohup npm run dev:full > /tmp/netviz.log 2>&1 &` |
-| Stop | `lsof -ti:9040,9041 \| xargs kill -9` |
+| Stop All | `lsof -ti:9040,9041,9042 \| xargs kill -9` |
 | Update | `git pull origin main && npm install` |
-| Firewall | `sudo ufw allow 9040/tcp` |
+| Reset DB | `rm -f server/users.db` |
 | Health Check | `curl http://127.0.0.1:9041/api/health` |
 
 ---
@@ -388,8 +351,8 @@ rm -f server/users.db
 
 | Service | URL | Notes |
 |---------|-----|-------|
-| Frontend (Local) | http://localhost:9040 | Main application |
-| Frontend (Network) | http://YOUR_IP:9040 | Requires firewall rule |
+| Application | http://localhost:9040 | Main entry point (gateway) |
+| Network Access | http://YOUR_IP:9040 | Requires firewall rule |
 | Auth API | http://127.0.0.1:9041/api | Localhost only |
 | Health Check | http://127.0.0.1:9041/api/health | Server status |
 
@@ -399,7 +362,7 @@ rm -f server/users.db
 
 | Username | Password | Role | Notes |
 |----------|----------|------|-------|
-| admin | admin123 | Administrator | Change after first login! |
+| admin | admin123 | Administrator | **Change after first login!** |
 
 ---
 
