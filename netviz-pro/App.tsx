@@ -20,11 +20,15 @@ import CapacityPlanningModal from './components/CapacityPlanningModal';
 import TrafficUtilizationMatrix from './components/TrafficUtilizationMatrix';
 import PrePostTrafficModal from './components/PrePostTrafficModal';
 import InterfaceCapacityDashboard from './components/InterfaceCapacityDashboard';
+import UserStatusBar from './components/UserStatusBar';
+import AdminPanel from './components/AdminPanel';
+import ChangePasswordModal from './components/ChangePasswordModal';
 import { NetworkData, NetworkNode, PathResult, NetworkLink } from './types';
 import { EMPTY_NETWORK_DATA, COUNTRY_COLORS } from './constants';
 import { Layout, Github, Share2, Activity, Network, Eye, EyeOff, CheckSquare, Square, Zap, AlertTriangle, Download, Trash2, GitCompare, TrendingUp, Globe, FlaskConical, Grid3X3, Route, Lightbulb, Waves, HeartPulse, HardDrive, BarChart3, GitBranch, Sun, Moon, FileDown } from 'lucide-react';
 import { useLocalStorage, clearLocalStorageKeys } from './hooks/useLocalStorage';
 import { useTheme } from './context/ThemeContext';
+import { useAuth } from './context/AuthContext';
 import { exportAllToSingleFile, ExportColumn } from './utils/exportUtils';
 import { findAllPaths } from './utils/graphAlgorithms';
 
@@ -38,6 +42,7 @@ const STORAGE_KEYS = {
 
 const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const { isAdmin } = useAuth();
   // Original Data (Immutable Source) - PERSISTED
   // Starts with empty state - user uploads their topology (scalable for any size)
   const [originalData, setOriginalData] = useLocalStorage<NetworkData>(
@@ -78,6 +83,8 @@ const App: React.FC = () => {
   const [showTrafficMatrixModal, setShowTrafficMatrixModal] = useState(false);
   const [showPrePostTrafficModal, setShowPrePostTrafficModal] = useState(false);
   const [showInterfaceDashboard, setShowInterfaceDashboard] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [analysisSelection, setAnalysisSelection] = useState<{
     source: { id: string, country: string } | null;
     dest: { id: string, country: string } | null;
@@ -612,6 +619,15 @@ const App: React.FC = () => {
           >
             <Trash2 className="w-4 h-4" />
           </button>
+
+          {/* Separator */}
+          <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+
+          {/* User Status */}
+          <UserStatusBar
+            onOpenAdmin={() => setShowAdminPanel(true)}
+            onOpenSettings={() => setShowChangePasswordModal(true)}
+          />
         </div>
       </header>
 
@@ -919,6 +935,22 @@ const App: React.FC = () => {
             <InterfaceCapacityDashboard
               data={currentData}
               onClose={() => setShowInterfaceDashboard(false)}
+            />
+          )}
+
+          {/* Admin Panel Modal */}
+          {showAdminPanel && isAdmin && (
+            <AdminPanel
+              isOpen={showAdminPanel}
+              onClose={() => setShowAdminPanel(false)}
+            />
+          )}
+
+          {/* Change Password Modal */}
+          {showChangePasswordModal && (
+            <ChangePasswordModal
+              isOpen={showChangePasswordModal}
+              onClose={() => setShowChangePasswordModal(false)}
             />
           )}
         </main>

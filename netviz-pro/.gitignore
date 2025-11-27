@@ -12,6 +12,21 @@ dist
 dist-ssr
 *.local
 
+# Database files (SENSITIVE - contains user credentials)
+server/*.db
+server/*.db-journal
+*.db
+*.db-journal
+
+# Environment files with credentials
+.env
+.env.local
+.env.*.local
+
+# Never commit credentials
+credentials.json
+secrets.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
