@@ -77,6 +77,12 @@ User Request → Port 9040 (Gateway)
 
 ## Prerequisites Check
 
+**Option 1: Run the automated check script**
+```bash
+curl -fsSL https://raw.githubusercontent.com/zumanm1/OSPF2-LL-JSON/main/netviz-pro/check.sh | bash
+```
+
+**Option 2: Manual verification**
 Before installing, verify your system has these requirements:
 
 ```bash
@@ -173,16 +179,20 @@ Pre-built bash scripts for common operations:
 
 | Script | Description |
 |--------|-------------|
+| `./check.sh` | Validate prerequisites (git, node, npm, ports, disk) |
+| `./prep.sh` | Full reinstall (stops, removes, clones, installs) |
+| `./run.sh` | Start + validate all services |
 | `./start.sh` | Start all servers in background |
 | `./stop.sh` | Stop all running servers |
 | `./restart.sh` | Stop and start all servers |
 | `./clean-db.sh` | Reset database to fresh state (recreates default admin) |
-| `./prep.sh` | Full reinstall (stops, removes, clones, installs) |
-| `./run.sh` | Start + validate all services |
 
 ### Usage Examples
 ```bash
 cd ~/OSPF2-LL-JSON/netviz-pro
+
+# Check prerequisites before install
+./check.sh
 
 # Start servers
 ./start.sh
