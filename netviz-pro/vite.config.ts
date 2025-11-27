@@ -6,9 +6,9 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
       server: {
-        port: 9040,
-        strictPort: true, // Only use port 9040, fail if taken
-        host: '0.0.0.0',
+        port: 9042, // Internal port - Gateway server handles public access on 9040
+        strictPort: true,
+        host: '127.0.0.1', // Localhost only - not directly accessible externally
       },
       plugins: [react()],
       define: {

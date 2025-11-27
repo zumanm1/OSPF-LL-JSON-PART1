@@ -23,12 +23,20 @@ git clone https://github.com/zumanm1/OSPF2-LL-JSON.git && cd OSPF2-LL-JSON/netvi
 
 ## Architecture Overview
 
-NetViz Pro has two components:
+NetViz Pro has three components with **server-side authentication protection**:
 
-| Component | Port | Description |
-|-----------|------|-------------|
-| Frontend (Vite) | 9040 | React UI - OSPF Topology Visualizer |
-| Auth Server | 9041 | Express API - User authentication (localhost only) |
+| Component | Port | Access | Description |
+|-----------|------|--------|-------------|
+| Gateway Server | 9040 | Public | Auth gateway - blocks all access without login |
+| Auth Server | 9041 | Localhost | Express API - User authentication |
+| Vite Dev Server | 9042 | Localhost | React UI (proxied through gateway) |
+
+**Security Model:**
+- Users access port 9040 (gateway)
+- Gateway shows login page until authenticated
+- After login, gateway proxies to Vite (9042)
+- Auth API (9041) is localhost-only
+- **No content is served without authentication**
 
 ---
 
@@ -181,11 +189,13 @@ sudo ufw status | grep 9040
 
 | Feature | Description |
 |---------|-------------|
+| **Server-Side Auth** | Gateway blocks ALL content until login (not just client-side) |
 | Localhost Auth | Auth API only accessible from 127.0.0.1 |
 | Password Hashing | bcrypt with salt rounds |
-| JWT Tokens | Session-based authentication |
+| JWT Tokens | Session-based authentication with cookies |
 | Usage Limits | Configurable login limits per user |
 | Admin Panel | User management (admin only) |
+| Protected Proxy | Vite server only accessible via authenticated gateway |
 
 ---
 
