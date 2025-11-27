@@ -23,9 +23,10 @@ import InterfaceCapacityDashboard from './components/InterfaceCapacityDashboard'
 import UserStatusBar from './components/UserStatusBar';
 import AdminPanel from './components/AdminPanel';
 import ChangePasswordModal from './components/ChangePasswordModal';
+import DeviceManager from './components/DeviceManager';
 import { NetworkData, NetworkNode, PathResult, NetworkLink } from './types';
 import { EMPTY_NETWORK_DATA, COUNTRY_COLORS } from './constants';
-import { Layout, Github, Share2, Activity, Network, Eye, EyeOff, CheckSquare, Square, Zap, AlertTriangle, Download, Trash2, GitCompare, TrendingUp, Globe, FlaskConical, Grid3X3, Route, Lightbulb, Waves, HeartPulse, HardDrive, BarChart3, GitBranch, Sun, Moon, FileDown } from 'lucide-react';
+import { Layout, Github, Share2, Activity, Network, Eye, EyeOff, CheckSquare, Square, Zap, AlertTriangle, Download, Trash2, GitCompare, TrendingUp, Globe, FlaskConical, Grid3X3, Route, Lightbulb, Waves, HeartPulse, HardDrive, BarChart3, GitBranch, Sun, Moon, FileDown, Server } from 'lucide-react';
 import { useLocalStorage, clearLocalStorageKeys } from './hooks/useLocalStorage';
 import { useTheme } from './context/ThemeContext';
 import { useAuth } from './context/AuthContext';
@@ -85,6 +86,7 @@ const App: React.FC = () => {
   const [showInterfaceDashboard, setShowInterfaceDashboard] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showDeviceManager, setShowDeviceManager] = useState(false);
   const [analysisSelection, setAnalysisSelection] = useState<{
     source: { id: string, country: string } | null;
     dest: { id: string, country: string } | null;
@@ -596,6 +598,19 @@ const App: React.FC = () => {
           {/* Separator */}
           <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
 
+          {/* Device Manager Button */}
+          <button
+            onClick={() => setShowDeviceManager(true)}
+            className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-orange-100 dark:hover:bg-orange-900/50 border border-gray-300 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-500/50 transition-all text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-300"
+            title="Device Manager - Import/Export Devices"
+          >
+            <Server className="w-3.5 h-3.5" />
+            <span>Devices</span>
+          </button>
+
+          {/* Separator */}
+          <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+
           {/* Utility Buttons */}
           <button
             onClick={handleExportAll}
@@ -951,6 +966,14 @@ const App: React.FC = () => {
             <ChangePasswordModal
               isOpen={showChangePasswordModal}
               onClose={() => setShowChangePasswordModal(false)}
+            />
+          )}
+
+          {/* Device Manager Modal */}
+          {showDeviceManager && (
+            <DeviceManager
+              isOpen={showDeviceManager}
+              onClose={() => setShowDeviceManager(false)}
             />
           )}
         </main>
