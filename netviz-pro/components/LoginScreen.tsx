@@ -266,10 +266,10 @@ const LoginScreen: React.FC = () => {
         {/* Footer */}
         <div className={`mt-8 pt-6 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           <p className={`text-center text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            Default credentials: admin / admin123
+            Use your assigned credentials to login
           </p>
           <p className={`text-center text-xs mt-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-            Change password after first login
+            Contact your administrator if you need access
           </p>
           {/* Forgot Password Link */}
           <button
@@ -318,7 +318,7 @@ const LoginScreen: React.FC = () => {
                   isDark ? 'bg-emerald-900/30 text-emerald-300' : 'bg-emerald-50 text-emerald-700'
                 }`}>
                   <Check className="w-5 h-5" />
-                  <span>Password reset to admin123. Please login.</span>
+                  <span>Password reset to TempAdmin!2025. Please login.</span>
                 </div>
               ) : (
                 <>

@@ -1,0 +1,1949 @@
+{
+  "version": "1.0",
+  "type": "ospf-topology",
+  "exportedFrom": "designer",
+  "exportedAt": "2025-11-29T21:34:20.089Z",
+  "data": {
+    "nodes": [
+      {
+        "id": "deu-r10",
+        "name": "deu-r10",
+        "hostname": "deu-r10",
+        "loopback_ip": "172.16.10.10",
+        "country": "DEU",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "gbr-r9",
+        "name": "gbr-r9",
+        "hostname": "gbr-r9",
+        "loopback_ip": "172.16.9.9",
+        "country": "GBR",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "usa-r8",
+        "name": "usa-r8",
+        "hostname": "usa-r8",
+        "loopback_ip": "172.16.8.8",
+        "country": "USA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zwe-r3",
+        "name": "zwe-r3",
+        "hostname": "zwe-r3",
+        "loopback_ip": "172.16.3.3",
+        "country": "ZWE",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "zwe-r1",
+        "name": "zwe-r1",
+        "hostname": "zwe-r1",
+        "loopback_ip": "172.16.1.1",
+        "country": "ZWE",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "zwe-r4",
+        "name": "zwe-r4",
+        "hostname": "zwe-r4",
+        "loopback_ip": "172.16.4.4",
+        "country": "ZWE",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "deu-r6",
+        "name": "deu-r6",
+        "hostname": "deu-r6",
+        "loopback_ip": "172.16.6.6",
+        "country": "DEU",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 5
+      },
+      {
+        "id": "zwe-r2",
+        "name": "zwe-r2",
+        "hostname": "zwe-r2",
+        "loopback_ip": "172.16.2.2",
+        "country": "ZWE",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 6
+      },
+      {
+        "id": "usa-r5",
+        "name": "usa-r5",
+        "hostname": "usa-r5",
+        "loopback_ip": "172.16.5.5",
+        "country": "USA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "gbr-r7",
+        "name": "gbr-r7",
+        "hostname": "gbr-r7",
+        "loopback_ip": "172.16.7.7",
+        "country": "GBR",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r1",
+        "name": "zaf-r1",
+        "hostname": "zaf-r1",
+        "loopback_ip": "172.16.100.1",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r2",
+        "name": "zaf-r2",
+        "hostname": "zaf-r2",
+        "loopback_ip": "172.16.101.2",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "zaf-r3",
+        "name": "zaf-r3",
+        "hostname": "zaf-r3",
+        "loopback_ip": "172.16.102.3",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "zaf-r4",
+        "name": "zaf-r4",
+        "hostname": "zaf-r4",
+        "loopback_ip": "172.16.103.4",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r5",
+        "name": "zaf-r5",
+        "hostname": "zaf-r5",
+        "loopback_ip": "172.16.104.5",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r6",
+        "name": "zaf-r6",
+        "hostname": "zaf-r6",
+        "loopback_ip": "172.16.105.6",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r7",
+        "name": "zaf-r7",
+        "hostname": "zaf-r7",
+        "loopback_ip": "172.16.106.7",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "zaf-r8",
+        "name": "zaf-r8",
+        "hostname": "zaf-r8",
+        "loopback_ip": "172.16.107.8",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "zaf-r9",
+        "name": "zaf-r9",
+        "hostname": "zaf-r9",
+        "loopback_ip": "172.16.108.9",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "zaf-r10",
+        "name": "zaf-r10",
+        "hostname": "zaf-r10",
+        "loopback_ip": "172.16.109.10",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "zaf-r11",
+        "name": "zaf-r11",
+        "hostname": "zaf-r11",
+        "loopback_ip": "172.16.110.11",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r12",
+        "name": "zaf-r12",
+        "hostname": "zaf-r12",
+        "loopback_ip": "172.16.111.12",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "zaf-r13",
+        "name": "zaf-r13",
+        "hostname": "zaf-r13",
+        "loopback_ip": "172.16.112.13",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r14",
+        "name": "zaf-r14",
+        "hostname": "zaf-r14",
+        "loopback_ip": "172.16.113.14",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "zaf-r15",
+        "name": "zaf-r15",
+        "hostname": "zaf-r15",
+        "loopback_ip": "172.16.114.15",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 5
+      },
+      {
+        "id": "zaf-r16",
+        "name": "zaf-r16",
+        "hostname": "zaf-r16",
+        "loopback_ip": "172.16.115.16",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r17",
+        "name": "zaf-r17",
+        "hostname": "zaf-r17",
+        "loopback_ip": "172.16.116.17",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "zaf-r18",
+        "name": "zaf-r18",
+        "hostname": "zaf-r18",
+        "loopback_ip": "172.16.117.18",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "zaf-r19",
+        "name": "zaf-r19",
+        "hostname": "zaf-r19",
+        "loopback_ip": "172.16.118.19",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "zaf-r20",
+        "name": "zaf-r20",
+        "hostname": "zaf-r20",
+        "loopback_ip": "172.16.119.20",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "zaf-r21",
+        "name": "zaf-r21",
+        "hostname": "zaf-r21",
+        "loopback_ip": "172.16.120.21",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r22",
+        "name": "zaf-r22",
+        "hostname": "zaf-r22",
+        "loopback_ip": "172.16.121.22",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "zaf-r23",
+        "name": "zaf-r23",
+        "hostname": "zaf-r23",
+        "loopback_ip": "172.16.122.23",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "zaf-r24",
+        "name": "zaf-r24",
+        "hostname": "zaf-r24",
+        "loopback_ip": "172.16.123.24",
+        "country": "ZAF",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "lso-r1",
+        "name": "lso-r1",
+        "hostname": "lso-r1",
+        "loopback_ip": "172.16.124.1",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "lso-r2",
+        "name": "lso-r2",
+        "hostname": "lso-r2",
+        "loopback_ip": "172.16.125.2",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "lso-r3",
+        "name": "lso-r3",
+        "hostname": "lso-r3",
+        "loopback_ip": "172.16.126.3",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "lso-r4",
+        "name": "lso-r4",
+        "hostname": "lso-r4",
+        "loopback_ip": "172.16.127.4",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "lso-r5",
+        "name": "lso-r5",
+        "hostname": "lso-r5",
+        "loopback_ip": "172.16.128.5",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "lso-r6",
+        "name": "lso-r6",
+        "hostname": "lso-r6",
+        "loopback_ip": "172.16.129.6",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "lso-r7",
+        "name": "lso-r7",
+        "hostname": "lso-r7",
+        "loopback_ip": "172.16.130.7",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "lso-r8",
+        "name": "lso-r8",
+        "hostname": "lso-r8",
+        "loopback_ip": "172.16.131.8",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "lso-r9",
+        "name": "lso-r9",
+        "hostname": "lso-r9",
+        "loopback_ip": "172.16.132.9",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "lso-r10",
+        "name": "lso-r10",
+        "hostname": "lso-r10",
+        "loopback_ip": "172.16.133.10",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "lso-r11",
+        "name": "lso-r11",
+        "hostname": "lso-r11",
+        "loopback_ip": "172.16.134.11",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "lso-r12",
+        "name": "lso-r12",
+        "hostname": "lso-r12",
+        "loopback_ip": "172.16.135.12",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "lso-r13",
+        "name": "lso-r13",
+        "hostname": "lso-r13",
+        "loopback_ip": "172.16.136.13",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "lso-r14",
+        "name": "lso-r14",
+        "hostname": "lso-r14",
+        "loopback_ip": "172.16.137.14",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "lso-r15",
+        "name": "lso-r15",
+        "hostname": "lso-r15",
+        "loopback_ip": "172.16.138.15",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "lso-r16",
+        "name": "lso-r16",
+        "hostname": "lso-r16",
+        "loopback_ip": "172.16.139.16",
+        "country": "LSO",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "moz-r1",
+        "name": "moz-r1",
+        "hostname": "moz-r1",
+        "loopback_ip": "172.16.140.1",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "moz-r2",
+        "name": "moz-r2",
+        "hostname": "moz-r2",
+        "loopback_ip": "172.16.141.2",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "moz-r3",
+        "name": "moz-r3",
+        "hostname": "moz-r3",
+        "loopback_ip": "172.16.142.3",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "moz-r4",
+        "name": "moz-r4",
+        "hostname": "moz-r4",
+        "loopback_ip": "172.16.143.4",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "moz-r5",
+        "name": "moz-r5",
+        "hostname": "moz-r5",
+        "loopback_ip": "172.16.144.5",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "moz-r6",
+        "name": "moz-r6",
+        "hostname": "moz-r6",
+        "loopback_ip": "172.16.145.6",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "moz-r7",
+        "name": "moz-r7",
+        "hostname": "moz-r7",
+        "loopback_ip": "172.16.146.7",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "moz-r8",
+        "name": "moz-r8",
+        "hostname": "moz-r8",
+        "loopback_ip": "172.16.147.8",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "moz-r9",
+        "name": "moz-r9",
+        "hostname": "moz-r9",
+        "loopback_ip": "172.16.148.9",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "moz-r10",
+        "name": "moz-r10",
+        "hostname": "moz-r10",
+        "loopback_ip": "172.16.149.10",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "moz-r11",
+        "name": "moz-r11",
+        "hostname": "moz-r11",
+        "loopback_ip": "172.16.150.11",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "moz-r12",
+        "name": "moz-r12",
+        "hostname": "moz-r12",
+        "loopback_ip": "172.16.151.12",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "moz-r13",
+        "name": "moz-r13",
+        "hostname": "moz-r13",
+        "loopback_ip": "172.16.152.13",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "moz-r14",
+        "name": "moz-r14",
+        "hostname": "moz-r14",
+        "loopback_ip": "172.16.153.14",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "moz-r15",
+        "name": "moz-r15",
+        "hostname": "moz-r15",
+        "loopback_ip": "172.16.154.15",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "moz-r16",
+        "name": "moz-r16",
+        "hostname": "moz-r16",
+        "loopback_ip": "172.16.155.16",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "moz-r17",
+        "name": "moz-r17",
+        "hostname": "moz-r17",
+        "loopback_ip": "172.16.156.17",
+        "country": "MOZ",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 5
+      },
+      {
+        "id": "prt-r1",
+        "name": "prt-r1",
+        "hostname": "prt-r1",
+        "loopback_ip": "172.16.157.1",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "prt-r2",
+        "name": "prt-r2",
+        "hostname": "prt-r2",
+        "loopback_ip": "172.16.158.2",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "prt-r3",
+        "name": "prt-r3",
+        "hostname": "prt-r3",
+        "loopback_ip": "172.16.159.3",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "prt-r4",
+        "name": "prt-r4",
+        "hostname": "prt-r4",
+        "loopback_ip": "172.16.160.4",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "prt-r5",
+        "name": "prt-r5",
+        "hostname": "prt-r5",
+        "loopback_ip": "172.16.161.5",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "prt-r6",
+        "name": "prt-r6",
+        "hostname": "prt-r6",
+        "loopback_ip": "172.16.162.6",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "prt-r7",
+        "name": "prt-r7",
+        "hostname": "prt-r7",
+        "loopback_ip": "172.16.163.7",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "prt-r8",
+        "name": "prt-r8",
+        "hostname": "prt-r8",
+        "loopback_ip": "172.16.164.8",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "prt-r9",
+        "name": "prt-r9",
+        "hostname": "prt-r9",
+        "loopback_ip": "172.16.165.9",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "prt-r10",
+        "name": "prt-r10",
+        "hostname": "prt-r10",
+        "loopback_ip": "172.16.166.10",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 5
+      },
+      {
+        "id": "prt-r11",
+        "name": "prt-r11",
+        "hostname": "prt-r11",
+        "loopback_ip": "172.16.167.11",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "prt-r12",
+        "name": "prt-r12",
+        "hostname": "prt-r12",
+        "loopback_ip": "172.16.168.12",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "prt-r13",
+        "name": "prt-r13",
+        "hostname": "prt-r13",
+        "loopback_ip": "172.16.169.13",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "prt-r14",
+        "name": "prt-r14",
+        "hostname": "prt-r14",
+        "loopback_ip": "172.16.170.14",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "prt-r15",
+        "name": "prt-r15",
+        "hostname": "prt-r15",
+        "loopback_ip": "172.16.171.15",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "prt-r16",
+        "name": "prt-r16",
+        "hostname": "prt-r16",
+        "loopback_ip": "172.16.172.16",
+        "country": "PRT",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "fra-r1",
+        "name": "fra-r1",
+        "hostname": "fra-r1",
+        "loopback_ip": "172.16.173.1",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "fra-r2",
+        "name": "fra-r2",
+        "hostname": "fra-r2",
+        "loopback_ip": "172.16.174.2",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "fra-r3",
+        "name": "fra-r3",
+        "hostname": "fra-r3",
+        "loopback_ip": "172.16.175.3",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "fra-r4",
+        "name": "fra-r4",
+        "hostname": "fra-r4",
+        "loopback_ip": "172.16.176.4",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "fra-r5",
+        "name": "fra-r5",
+        "hostname": "fra-r5",
+        "loopback_ip": "172.16.177.5",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "fra-r6",
+        "name": "fra-r6",
+        "hostname": "fra-r6",
+        "loopback_ip": "172.16.178.6",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "fra-r7",
+        "name": "fra-r7",
+        "hostname": "fra-r7",
+        "loopback_ip": "172.16.179.7",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "fra-r8",
+        "name": "fra-r8",
+        "hostname": "fra-r8",
+        "loopback_ip": "172.16.180.8",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "fra-r9",
+        "name": "fra-r9",
+        "hostname": "fra-r9",
+        "loopback_ip": "172.16.181.9",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "fra-r10",
+        "name": "fra-r10",
+        "hostname": "fra-r10",
+        "loopback_ip": "172.16.182.10",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "fra-r11",
+        "name": "fra-r11",
+        "hostname": "fra-r11",
+        "loopback_ip": "172.16.183.11",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "fra-r12",
+        "name": "fra-r12",
+        "hostname": "fra-r12",
+        "loopback_ip": "172.16.184.12",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 4
+      },
+      {
+        "id": "fra-r13",
+        "name": "fra-r13",
+        "hostname": "fra-r13",
+        "loopback_ip": "172.16.185.13",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 2
+      },
+      {
+        "id": "fra-r14",
+        "name": "fra-r14",
+        "hostname": "fra-r14",
+        "loopback_ip": "172.16.186.14",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "fra-r15",
+        "name": "fra-r15",
+        "hostname": "fra-r15",
+        "loopback_ip": "172.16.187.15",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "fra-r16",
+        "name": "fra-r16",
+        "hostname": "fra-r16",
+        "loopback_ip": "172.16.188.16",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 3
+      },
+      {
+        "id": "fra-r17",
+        "name": "fra-r17",
+        "hostname": "fra-r17",
+        "loopback_ip": "172.16.189.17",
+        "country": "FRA",
+        "is_active": true,
+        "node_type": "router",
+        "neighbor_count": 5
+      }
+    ],
+    "links": [
+      {
+        "source": "deu-r10",
+        "target": "usa-r5",
+        "forward_cost": 600,
+        "reverse_cost": 800
+      },
+      {
+        "source": "deu-r10",
+        "target": "zwe-r2",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "deu-r10",
+        "target": "deu-r6",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "gbr-r9",
+        "target": "usa-r8",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "usa-r8",
+        "target": "zwe-r4",
+        "forward_cost": 250,
+        "reverse_cost": 150
+      },
+      {
+        "source": "zwe-r3",
+        "target": "zwe-r4",
+        "forward_cost": 70,
+        "reverse_cost": 1130
+      },
+      {
+        "source": "zwe-r1",
+        "target": "zwe-r2",
+        "forward_cost": 200,
+        "reverse_cost": 300
+      },
+      {
+        "source": "zwe-r1",
+        "target": "zwe-r2",
+        "forward_cost": 1000,
+        "reverse_cost": 2000
+      },
+      {
+        "source": "zwe-r1",
+        "target": "zwe-r4",
+        "forward_cost": 10,
+        "reverse_cost": 1
+      },
+      {
+        "source": "deu-r6",
+        "target": "zwe-r4",
+        "forward_cost": 1,
+        "reverse_cost": 1
+      },
+      {
+        "source": "deu-r6",
+        "target": "gbr-r7",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "deu-r6",
+        "target": "gbr-r9",
+        "forward_cost": 180,
+        "reverse_cost": 90
+      },
+      {
+        "source": "zwe-r2",
+        "target": "zwe-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zwe-r2",
+        "target": "zwe-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "usa-r5",
+        "target": "zwe-r3",
+        "forward_cost": 1,
+        "reverse_cost": 1
+      },
+      {
+        "source": "usa-r5",
+        "target": "usa-r8",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "gbr-r7",
+        "target": "zwe-r1",
+        "forward_cost": 500,
+        "reverse_cost": 400
+      },
+      {
+        "source": "gbr-r7",
+        "target": "gbr-r9",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r1",
+        "target": "zaf-r2",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r2",
+        "target": "zaf-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r3",
+        "target": "zaf-r4",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r4",
+        "target": "zaf-r5",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r5",
+        "target": "zaf-r6",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r6",
+        "target": "zaf-r7",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r7",
+        "target": "zaf-r8",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r8",
+        "target": "zaf-r9",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r9",
+        "target": "zaf-r10",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r10",
+        "target": "zaf-r11",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r11",
+        "target": "zaf-r12",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r12",
+        "target": "zaf-r13",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r13",
+        "target": "zaf-r14",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r14",
+        "target": "zaf-r15",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r15",
+        "target": "zaf-r16",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r16",
+        "target": "zaf-r17",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r17",
+        "target": "zaf-r18",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r18",
+        "target": "zaf-r19",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r19",
+        "target": "zaf-r20",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r20",
+        "target": "zaf-r21",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r21",
+        "target": "zaf-r22",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r22",
+        "target": "zaf-r23",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r23",
+        "target": "zaf-r24",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r24",
+        "target": "zaf-r1",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r23",
+        "target": "zaf-r22",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r5",
+        "target": "zaf-r21",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r7",
+        "target": "zaf-r9",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r14",
+        "target": "zaf-r7",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r1",
+        "target": "zaf-r9",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r8",
+        "target": "zaf-r6",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r11",
+        "target": "zaf-r23",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r24",
+        "target": "zaf-r15",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r1",
+        "target": "lso-r2",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r2",
+        "target": "lso-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r3",
+        "target": "lso-r4",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r4",
+        "target": "lso-r5",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r5",
+        "target": "lso-r6",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r6",
+        "target": "lso-r7",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r7",
+        "target": "lso-r8",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r8",
+        "target": "lso-r9",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r9",
+        "target": "lso-r10",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r10",
+        "target": "lso-r11",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r11",
+        "target": "lso-r12",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r12",
+        "target": "lso-r13",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r13",
+        "target": "lso-r14",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r14",
+        "target": "lso-r15",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r15",
+        "target": "lso-r16",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r16",
+        "target": "lso-r1",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r2",
+        "target": "lso-r16",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r15",
+        "target": "lso-r7",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r1",
+        "target": "lso-r5",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r8",
+        "target": "lso-r2",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r1",
+        "target": "moz-r2",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r2",
+        "target": "moz-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r3",
+        "target": "moz-r4",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r4",
+        "target": "moz-r5",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r5",
+        "target": "moz-r6",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r6",
+        "target": "moz-r7",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r7",
+        "target": "moz-r8",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r8",
+        "target": "moz-r9",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r9",
+        "target": "moz-r10",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r10",
+        "target": "moz-r11",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r11",
+        "target": "moz-r12",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r12",
+        "target": "moz-r13",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r13",
+        "target": "moz-r14",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r14",
+        "target": "moz-r15",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r15",
+        "target": "moz-r16",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r16",
+        "target": "moz-r17",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r17",
+        "target": "moz-r1",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r17",
+        "target": "moz-r13",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r6",
+        "target": "moz-r1",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r17",
+        "target": "moz-r4",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r7",
+        "target": "moz-r1",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r6",
+        "target": "moz-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r1",
+        "target": "prt-r2",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r2",
+        "target": "prt-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r3",
+        "target": "prt-r4",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r4",
+        "target": "prt-r5",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r5",
+        "target": "prt-r6",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r6",
+        "target": "prt-r7",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r7",
+        "target": "prt-r8",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r8",
+        "target": "prt-r9",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r9",
+        "target": "prt-r10",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r10",
+        "target": "prt-r11",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r11",
+        "target": "prt-r12",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r12",
+        "target": "prt-r13",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r13",
+        "target": "prt-r14",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r14",
+        "target": "prt-r15",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r15",
+        "target": "prt-r16",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r16",
+        "target": "prt-r1",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r8",
+        "target": "prt-r10",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r8",
+        "target": "prt-r14",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r10",
+        "target": "prt-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r12",
+        "target": "prt-r14",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r16",
+        "target": "prt-r4",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r1",
+        "target": "fra-r2",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r2",
+        "target": "fra-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r3",
+        "target": "fra-r4",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r4",
+        "target": "fra-r5",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r5",
+        "target": "fra-r6",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r6",
+        "target": "fra-r7",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r7",
+        "target": "fra-r8",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r8",
+        "target": "fra-r9",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r9",
+        "target": "fra-r10",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r10",
+        "target": "fra-r11",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r11",
+        "target": "fra-r12",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r12",
+        "target": "fra-r13",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r13",
+        "target": "fra-r14",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r14",
+        "target": "fra-r15",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r15",
+        "target": "fra-r16",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r16",
+        "target": "fra-r17",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r17",
+        "target": "fra-r1",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r16",
+        "target": "fra-r3",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r5",
+        "target": "fra-r8",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r1",
+        "target": "fra-r14",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r17",
+        "target": "fra-r15",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r12",
+        "target": "fra-r4",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r8",
+        "target": "lso-r14",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r14",
+        "target": "lso-r13",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r13",
+        "target": "moz-r11",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r1",
+        "target": "moz-r5",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r7",
+        "target": "prt-r5",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r17",
+        "target": "prt-r2",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r6",
+        "target": "fra-r17",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r15",
+        "target": "fra-r12",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r8",
+        "target": "zaf-r16",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r6",
+        "target": "zaf-r15",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "zaf-r13",
+        "target": "zwe-r2",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r1",
+        "target": "deu-r6",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "fra-r17",
+        "target": "gbr-r9",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "prt-r10",
+        "target": "usa-r5",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "moz-r11",
+        "target": "zaf-r15",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      },
+      {
+        "source": "lso-r12",
+        "target": "zaf-r4",
+        "forward_cost": 10,
+        "reverse_cost": 10
+      }
+    ],
+    "customLinks": [],
+    "visualConfig": {
+      "showHull": true,
+      "hullPadding": 20,
+      "hullFontSize": 40,
+      "nodeFontSize": 14,
+      "nodeSize": 20,
+      "linkWidth": 1
+    },
+    "physicsConfig": {
+      "gravitationalConstant": -20000,
+      "springLength": 200,
+      "springConstant": 0.04
+    },
+    "activeCountries": {
+      "GBR": false,
+      "DEU": true,
+      "USA": false,
+      "ZWE": true,
+      "ZAF": true,
+      "FRA": true,
+      "LSO": false,
+      "NGA": false,
+      "PRT": false,
+      "MOZ": false
+    },
+    "metadata": {
+      "totalNodes": 100,
+      "totalLinks": 151,
+      "customLinksCount": 0
+    }
+  }
+}

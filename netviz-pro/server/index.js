@@ -422,6 +422,132 @@ app.get('/api/admin/users/:id/history', requireAuth, requireAdmin, (req, res) =>
   res.json(history);
 });
 
+// ============================================================================
+// PIN-PROTECTED ADMIN PASSWORD RESET (Public Endpoint - Protected by PIN)
+// ============================================================================
+
+// SECURITY: Validate PIN at startup
+const ADMIN_RESET_PIN = process.env.ADMIN_RESET_PIN;
+
+if (!ADMIN_RESET_PIN || ADMIN_RESET_PIN === '12345' || ADMIN_RESET_PIN === '00000' || ADMIN_RESET_PIN === '11111') {
+  console.error('[Auth] ADMIN_RESET_PIN must be set to a strong value (not default or common PIN)');
+  console.error('[Auth] Set ADMIN_RESET_PIN in .env.local to a unique 8+ character value');
+  process.exit(1);
+}
+
+if (ADMIN_RESET_PIN.length < 8) {
+  console.error('[Auth] ADMIN_RESET_PIN must be at least 8 characters long for security');
+  process.exit(1);
+}
+
+// Rate limiting for reset attempts
+const resetAttempts = new Map(); // IP -> {count, lastAttempt, blockUntil}
+
+// Cleanup old attempts every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, data] of resetAttempts.entries()) {
+    // Remove entries older than 24 hours
+    if (now - data.lastAttempt > 86400000) {
+      resetAttempts.delete(ip);
+    }
+  }
+}, 3600000);
+
+// Optional: IP whitelist
+const ADMIN_RESET_ALLOWED_IPS = process.env.ADMIN_RESET_ALLOWED_IPS 
+  ? process.env.ADMIN_RESET_ALLOWED_IPS.split(',').map(ip => ip.trim())
+  : null; // null = allow all IPs (less secure but more flexible)
+
+app.post('/api/auth/reset-admin', (req, res) => {
+  const { pin } = req.body;
+  const clientIP = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+
+  // IP Whitelist check (if configured)
+  if (ADMIN_RESET_ALLOWED_IPS && !ADMIN_RESET_ALLOWED_IPS.includes(clientIP)) {
+    console.warn(`[Auth] Reset attempt from unauthorized IP: ${clientIP}`);
+    return res.status(403).json({ error: 'Access denied from this IP address' });
+  }
+
+  // Get or initialize attempt tracking for this IP
+  let attempts = resetAttempts.get(clientIP) || { count: 0, lastAttempt: 0, blockUntil: 0 };
+
+  // Check if IP is currently blocked
+  if (attempts.blockUntil > now) {
+    const remainingMinutes = Math.ceil((attempts.blockUntil - now) / 60000);
+    console.warn(`[Auth] Reset blocked - IP ${clientIP} is rate limited`);
+    return res.status(429).json({ 
+      error: 'Too many reset attempts', 
+      message: `Please try again in ${remainingMinutes} minute(s)` 
+    });
+  }
+
+  // Reset counter after 1 hour of no attempts
+  if (now - attempts.lastAttempt > 3600000) {
+    attempts.count = 0;
+  }
+
+  if (!pin) {
+    return res.status(400).json({ error: 'PIN is required' });
+  }
+
+  // Validate PIN
+  if (pin !== ADMIN_RESET_PIN) {
+    attempts.count++;
+    attempts.lastAttempt = now;
+
+    // Progressive blocking: 3 attempts = 1 hour block, 6+ attempts = 24 hour block
+    if (attempts.count >= 6) {
+      attempts.blockUntil = now + 86400000; // 24 hours
+      console.error(`[Auth] SECURITY ALERT - Multiple failed reset attempts from ${clientIP} - Blocked for 24 hours`);
+    } else if (attempts.count >= 3) {
+      attempts.blockUntil = now + 3600000; // 1 hour
+      console.warn(`[Auth] Failed reset attempts from ${clientIP} - Blocked for 1 hour`);
+    } else {
+      console.log(`[Auth] Failed admin reset attempt ${attempts.count}/3 from ${clientIP}`);
+    }
+
+    resetAttempts.set(clientIP, attempts);
+
+    return res.status(401).json({ 
+      error: 'Invalid PIN',
+      attemptsRemaining: Math.max(0, 3 - attempts.count)
+    });
+  }
+
+  // PIN is correct - proceed with reset
+
+  // Find admin user
+  const adminUser = getUserByUsername(process.env.APP_ADMIN_USERNAME || 'netviz_admin');
+  if (!adminUser) {
+    return res.status(404).json({ error: 'Admin user not found' });
+  }
+
+  // Generate a cryptographically secure random temporary password
+  const crypto = await import('crypto');
+  const tempPassword = crypto.randomBytes(16).toString('base64').slice(0, 20) + '!Aa1';
+
+  updatePassword(adminUser.id, tempPassword);
+
+  // Clear rate limit for this IP after successful reset
+  resetAttempts.delete(clientIP);
+
+  // Log to server console only (NOT in response for security)
+  console.log(`[Auth] ============================================`);
+  console.log(`[Auth] ADMIN PASSWORD RESET`);
+  console.log(`[Auth] User: ${adminUser.username}`);
+  console.log(`[Auth] Temporary Password: ${tempPassword}`);
+  console.log(`[Auth] IP: ${clientIP}`);
+  console.log(`[Auth] Time: ${new Date().toISOString()}`);
+  console.log(`[Auth] ============================================`);
+
+  res.json({
+    success: true,
+    message: 'Admin password has been reset successfully. Check server console/logs for the temporary password.'
+  });
+});
+
 // HEALTH CHECK
 // ============================================================================
 app.get('/api/health', (req, res) => {

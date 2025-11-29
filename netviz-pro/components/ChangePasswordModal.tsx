@@ -8,11 +8,12 @@ import { useTheme } from '../context/ThemeContext';
 import { X, Key, Eye, EyeOff, AlertCircle, Check } from 'lucide-react';
 
 interface ChangePasswordModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClose }) => {
+const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen = true, onClose, onSuccess }) => {
   const { changePassword } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -49,7 +50,11 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
     if (result.success) {
       setSuccess(true);
       setTimeout(() => {
-        onClose();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          onClose();
+        }
         setSuccess(false);
         setCurrentPassword('');
         setNewPassword('');
