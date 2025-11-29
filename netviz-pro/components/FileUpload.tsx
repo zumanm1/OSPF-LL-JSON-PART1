@@ -34,6 +34,48 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingCo
           if (!processedData.metadata) processedData.metadata = {};
           processedData.metadata.data_source = `Uploaded: ${file.name} (PyATS)`;
         }
+        // Check for OSPF Designer format (data nested under 'data' property)
+        else if (json.type === 'ospf-topology' && json.data && json.data.nodes && Array.isArray(json.data.nodes)) {
+          console.log("Detected OSPF Designer format, parsing...");
+          const designerData = json.data;
+
+          // Convert nodes - they are already in standard format
+          const convertedNodes = designerData.nodes.map((node: any) => ({
+            ...node,
+            is_active: node.is_active !== false,
+            loopback_ip: node.loopback_ip || 'Unknown',
+            neighbor_count: node.neighbor_count || 0,
+          }));
+
+          // Convert links - add interface placeholders and ensure all cost fields
+          const convertedLinks = (designerData.links || []).map((link: any, index: number) => ({
+            source: link.source,
+            target: link.target,
+            source_interface: link.source_interface || `Gi0/${index}`,
+            target_interface: link.target_interface || `Gi0/${index}`,
+            forward_cost: link.forward_cost || link.cost || 10,
+            reverse_cost: link.reverse_cost || link.cost || 10,
+            cost: link.forward_cost || link.cost || 10,
+            original_cost: link.forward_cost || link.cost || 10,
+            original_forward_cost: link.forward_cost || link.cost || 10,
+            original_reverse_cost: link.reverse_cost || link.cost || 10,
+            is_asymmetric: (link.forward_cost !== link.reverse_cost),
+            status: link.status || 'up',
+          }));
+
+          processedData = {
+            nodes: convertedNodes,
+            links: convertedLinks,
+            timestamp: json.exportedAt || new Date().toISOString(),
+            metadata: {
+              node_count: convertedNodes.length,
+              edge_count: convertedLinks.length,
+              data_source: `Uploaded: ${file.name} (OSPF Designer)`,
+              asymmetric_count: convertedLinks.filter((l: any) => l.is_asymmetric).length,
+              ...designerData.metadata,
+            }
+          };
+        }
         // Check for format with physical_links (new database export format)
         else if (json.nodes && Array.isArray(json.nodes) && json.physical_links && Array.isArray(json.physical_links)) {
           console.log("Detected physical_links format, converting...");
@@ -121,7 +163,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingCo
             }
           };
         } else {
-          alert("Invalid JSON structure. Must contain a 'nodes' array or 'files' array (PyATS).");
+          alert("Invalid JSON structure. Supported formats:\n• Standard topology (nodes + links arrays)\n• PyATS format (files array)\n• OSPF Designer (type: 'ospf-topology' with data.nodes)\n• Database export (nodes + physical_links)");
           return;
         }
 
@@ -191,6 +233,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingCo
           <div className="flex items-center gap-1">
             <Terminal className="w-3 h-3" />
             <span>PyATS</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <FileJson className="w-3 h-3" />
+            <span>Designer</span>
           </div>
         </div>
       </div>
