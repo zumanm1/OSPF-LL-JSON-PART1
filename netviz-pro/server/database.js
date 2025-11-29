@@ -7,9 +7,12 @@ import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dbPath = path.join(__dirname, 'users.db');
+
+dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
 const db = new Database(dbPath);
 
@@ -58,20 +61,74 @@ try {
   db.exec(`ALTER TABLE users ADD COLUMN password_change_grace_logins INTEGER DEFAULT 10`);
 } catch (e) { /* Column already exists */ }
 
-// Create default admin user if not exists
-const createDefaultAdmin = () => {
-  const adminExists = db.prepare('SELECT id FROM users WHERE username = ?').get('admin');
-  if (!adminExists) {
-    const passwordHash = bcrypt.hashSync('admin123', 10);
-    db.prepare(`
-      INSERT INTO users (username, password_hash, role, max_uses, expiry_enabled, must_change_password, password_change_grace_logins)
-      VALUES (?, ?, 'admin', 0, 0, 1, 10)
-    `).run('admin', passwordHash);
-    console.log('[DB] Default admin user created (admin/admin123) - Password change required after 10 logins');
+const ADMIN_USERNAME = process.env.APP_ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.APP_ADMIN_PASSWORD;
+
+const ensureSecureBootstrapCredentials = () => {
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+    throw new Error('[DB] APP_ADMIN_USERNAME and APP_ADMIN_PASSWORD must be set before starting the authentication service.');
+  }
+
+  if (ADMIN_USERNAME.length < 3) {
+    throw new Error('[DB] APP_ADMIN_USERNAME must be at least 3 characters long.');
+  }
+
+  if (ADMIN_PASSWORD === 'admin123') {
+    throw new Error('[DB] APP_ADMIN_PASSWORD cannot be the insecure default value "admin123".');
+  }
+
+  if (ADMIN_PASSWORD.length < 12) {
+    throw new Error('[DB] APP_ADMIN_PASSWORD must be at least 12 characters long.');
+  }
+
+  const lowerPassword = ADMIN_PASSWORD.toLowerCase();
+  if (lowerPassword.includes('password') || lowerPassword.includes('change') || lowerPassword.includes('admin')) {
+    throw new Error('[DB] APP_ADMIN_PASSWORD appears to be a placeholder. Set a unique, random password.');
+  }
+
+  const complexity = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+  if (!complexity.test(ADMIN_PASSWORD)) {
+    throw new Error('[DB] APP_ADMIN_PASSWORD must include upper & lower case letters, a number, and a symbol.');
   }
 };
 
-createDefaultAdmin();
+const createBootstrapAdminIfMissing = () => {
+  ensureSecureBootstrapCredentials();
+
+  const existingAdmin = db.prepare('SELECT id, username, password_hash FROM users WHERE username = ?').get(ADMIN_USERNAME);
+
+  if (!existingAdmin) {
+    const passwordHash = bcrypt.hashSync(ADMIN_PASSWORD, 12);
+    db.prepare(`
+      INSERT INTO users (
+        username,
+        password_hash,
+        role,
+        max_uses,
+        expiry_enabled,
+        must_change_password,
+        password_change_grace_logins
+      )
+      VALUES (?, ?, 'admin', 0, 0, 0, 0)
+    `).run(ADMIN_USERNAME, passwordHash);
+
+    console.log(`[DB] Created initial admin account "${ADMIN_USERNAME}" using supplied bootstrap credentials.`);
+  } else if (bcrypt.compareSync('admin123', existingAdmin.password_hash)) {
+    throw new Error(`[DB] Admin account "${existingAdmin.username}" is still using the prohibited default password. Reset it before starting the service.`);
+  }
+};
+
+const blockDefaultPasswords = () => {
+  const users = db.prepare('SELECT id, username, password_hash FROM users').all();
+  for (const user of users) {
+    if (bcrypt.compareSync('admin123', user.password_hash)) {
+      throw new Error(`[DB] User "${user.username}" is using the prohibited default password "admin123". Update the credential and restart.`);
+    }
+  }
+};
+
+blockDefaultPasswords();
+createBootstrapAdminIfMissing();
 
 // ============================================================================
 // USER CRUD OPERATIONS
@@ -347,39 +404,5 @@ export const cleanExpiredSessions = () => {
 
 // Clean expired sessions every hour
 setInterval(cleanExpiredSessions, 3600000);
-
-// ============================================================================
-// ADMIN PASSWORD RESET (PIN PROTECTED)
-// ============================================================================
-const RESET_PIN = '08230';
-
-export const resetAdminPassword = (pin) => {
-  // Verify PIN
-  if (pin !== RESET_PIN) {
-    return { success: false, error: 'Invalid PIN' };
-  }
-
-  // Find admin user
-  const admin = db.prepare("SELECT id FROM users WHERE username = 'admin'").get();
-  if (!admin) {
-    return { success: false, error: 'Admin user not found' };
-  }
-
-  // Reset password to default and clear all restrictions
-  const defaultPasswordHash = bcrypt.hashSync('admin123', 10);
-  db.prepare(`
-    UPDATE users
-    SET password_hash = ?,
-        must_change_password = 1,
-        password_change_grace_logins = 10,
-        current_uses = 0,
-        is_expired = 0,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(defaultPasswordHash, admin.id);
-
-  console.log('[DB] Admin password reset to default (admin123) via PIN');
-  return { success: true, message: 'Admin password reset to admin123. Please change it after login.' };
-};
 
 export default db;

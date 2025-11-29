@@ -52,7 +52,8 @@ const apiCall = async (endpoint: string, token: string, options: RequestInit = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
       ...(options.headers || {})
-    }
+    },
+    credentials: 'include'
   });
 
   const data = await response.json();

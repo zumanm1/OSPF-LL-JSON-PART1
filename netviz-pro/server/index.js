@@ -12,6 +12,7 @@ import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -32,23 +33,61 @@ import {
   getLoginHistory,
   createSession,
   validateSession,
-  deleteSession,
-  resetAdminPassword
+  deleteSession
 } from './database.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
 const app = express();
-const PORT = process.env.AUTH_PORT || 9041;
+const PORT = parseInt(process.env.AUTH_PORT || '9041', 10);
 const HOST = process.env.AUTH_HOST || '0.0.0.0'; // Allow external access
-const JWT_SECRET = process.env.APP_SECRET_KEY || 'netviz-secret-key-change-in-production';
-const SESSION_TIMEOUT = parseInt(process.env.APP_SESSION_TIMEOUT) || 3600;
+const LOCALHOST_ONLY = (process.env.LOCALHOST_ONLY || 'true').toLowerCase() === 'true';
+const LISTEN_HOST = LOCALHOST_ONLY ? '127.0.0.1' : HOST;
+
+const rawJwtSecret = process.env.APP_SECRET_KEY;
+if (!rawJwtSecret) {
+  console.error('[Auth] APP_SECRET_KEY must be set to a strong value before starting the authentication service.');
+  process.exit(1);
+}
+
+const lowerSecret = rawJwtSecret.toLowerCase();
+
+if (['netviz-secret-key-change-in-production', 'netviz-dev-secret-key-change-me'].includes(rawJwtSecret)) {
+  console.error('[Auth] APP_SECRET_KEY is using an insecure default value. Please set a unique secret.');
+  process.exit(1);
+}
+
+if (lowerSecret.includes('change') || lowerSecret.includes('placeholder') || lowerSecret.includes('secret')) {
+  console.error('[Auth] APP_SECRET_KEY appears to be a placeholder. Set a unique, random secret.');
+  process.exit(1);
+}
+
+if (rawJwtSecret.length < 32) {
+  console.error('[Auth] APP_SECRET_KEY must be at least 32 characters long.');
+  process.exit(1);
+}
+
+const JWT_SECRET = rawJwtSecret;
+
+const parsedSessionTimeout = parseInt(process.env.APP_SESSION_TIMEOUT || '3600', 10);
+const SESSION_TIMEOUT = Number.isFinite(parsedSessionTimeout) && parsedSessionTimeout > 0
+  ? parsedSessionTimeout
+  : 3600;
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: !LOCALHOST_ONLY,
+  sameSite: 'strict',
+  path: '/'
+};
 
 // ============================================================================
 // MIDDLEWARE
 // ============================================================================
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Dynamic CORS - allow requests from any origin on port 9040
 app.use(cors({
@@ -75,7 +114,9 @@ app.use(cors({
 
 // Authentication middleware
 const requireAuth = (req, res, next) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const headerToken = req.headers.authorization?.replace('Bearer ', '');
+  const cookieToken = req.cookies?.netviz_session;
+  const token = headerToken || cookieToken;
 
   if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -86,12 +127,17 @@ const requireAuth = (req, res, next) => {
     const session = validateSession(token);
 
     if (!session) {
+      if (cookieToken) {
+        res.clearCookie('netviz_session', COOKIE_OPTIONS);
+      }
       return res.status(401).json({ error: 'Session expired or invalid' });
     }
 
-    // Check if user is expired
     const expiryStatus = checkExpiry(decoded.userId);
     if (expiryStatus.isExpired) {
+      if (cookieToken) {
+        res.clearCookie('netviz_session', COOKIE_OPTIONS);
+      }
       return res.status(403).json({
         error: 'Account expired',
         message: 'Your account has reached the maximum number of uses. Contact admin.'
@@ -100,8 +146,12 @@ const requireAuth = (req, res, next) => {
 
     req.user = decoded;
     req.session = session;
+    req.token = token;
     next();
   } catch (error) {
+    if (cookieToken) {
+      res.clearCookie('netviz_session', COOKIE_OPTIONS);
+    }
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
@@ -161,6 +211,11 @@ app.post('/api/auth/login', (req, res) => {
   createSession(user.id, token, SESSION_TIMEOUT);
   recordLogin(user.id, req.ip, true);
 
+  res.cookie('netviz_session', token, {
+    ...COOKIE_OPTIONS,
+    maxAge: SESSION_TIMEOUT * 1000
+  });
+
   res.json({
     success: true,
     token,
@@ -182,8 +237,15 @@ app.post('/api/auth/login', (req, res) => {
 
 // Logout
 app.post('/api/auth/logout', requireAuth, (req, res) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  deleteSession(token);
+  const headerToken = req.headers.authorization?.replace('Bearer ', '');
+  const cookieToken = req.cookies?.netviz_session;
+  const token = headerToken || cookieToken;
+
+  if (token) {
+    deleteSession(token);
+  }
+
+  res.clearCookie('netviz_session', COOKIE_OPTIONS);
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
@@ -194,6 +256,7 @@ app.get('/api/auth/validate', requireAuth, (req, res) => {
 
   res.json({
     valid: true,
+    token: req.token,
     user: {
       id: user.id,
       username: user.username,
@@ -359,29 +422,6 @@ app.get('/api/admin/users/:id/history', requireAuth, requireAdmin, (req, res) =>
   res.json(history);
 });
 
-// ============================================================================
-// ADMIN PASSWORD RESET (PIN PROTECTED - NO AUTH REQUIRED)
-// ============================================================================
-app.post('/api/auth/reset-admin', (req, res) => {
-  const { pin } = req.body;
-
-  if (!pin) {
-    return res.status(400).json({ error: 'PIN is required' });
-  }
-
-  const result = resetAdminPassword(pin);
-
-  if (!result.success) {
-    return res.status(400).json({ error: result.error });
-  }
-
-  res.json({
-    success: true,
-    message: result.message
-  });
-});
-
-// ============================================================================
 // HEALTH CHECK
 // ============================================================================
 app.get('/api/health', (req, res) => {
@@ -396,28 +436,26 @@ app.get('/api/health', (req, res) => {
 // ============================================================================
 // START SERVER (NETWORK ACCESSIBLE)
 // ============================================================================
-app.listen(PORT, HOST, () => {
+app.listen(PORT, LISTEN_HOST, () => {
   console.log('');
   console.log('============================================================');
   console.log('  NetViz Pro Authentication Server');
   console.log('============================================================');
   console.log(`  Status: Running`);
   console.log(`  Port: ${PORT}`);
-  console.log(`  Host: ${HOST}`);
-  console.log(`  Access: Network accessible`);
+  console.log(`  Host: ${LISTEN_HOST}`);
+  console.log(`  Access: ${LOCALHOST_ONLY ? 'Localhost only' : 'Network accessible'}`);
   console.log(`  Session Timeout: ${SESSION_TIMEOUT}s`);
   console.log('');
   console.log('  Security Features:');
   console.log('  - Password hashing with bcrypt');
-  console.log('  - JWT session tokens');
+  console.log('  - JWT session tokens (secure HttpOnly cookies)');
   console.log('  - Usage counter with configurable expiry');
   console.log('  - Admin-only password recovery');
+  console.log(`  - SameSite=strict cookies; Secure=${!LOCALHOST_ONLY}`);
   console.log('  - CORS protection (port 9040 origins only)');
   console.log('');
-  console.log('  Default Admin: admin / admin123');
-  console.log('  (Change password after first login!)');
   console.log('============================================================');
-  console.log('');
 });
 
 export default app;

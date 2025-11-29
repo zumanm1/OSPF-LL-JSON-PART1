@@ -26,7 +26,49 @@ const app = express();
 const GATEWAY_PORT = process.env.GATEWAY_PORT || 9040;
 const VITE_INTERNAL_PORT = process.env.VITE_INTERNAL_PORT || 9042;
 const AUTH_SERVER_PORT = process.env.AUTH_PORT || 9041;
-const JWT_SECRET = process.env.APP_SECRET_KEY || 'netviz-secret-key-change-in-production';
+const LOCALHOST_ONLY = (process.env.LOCALHOST_ONLY || 'true').toLowerCase() === 'true';
+const LISTEN_HOST = LOCALHOST_ONLY ? '127.0.0.1' : '0.0.0.0';
+
+const rawJwtSecret = process.env.APP_SECRET_KEY;
+if (!rawJwtSecret) {
+  console.error('[Gateway] APP_SECRET_KEY must be set to a strong value before starting the gateway.');
+  process.exit(1);
+}
+
+const normalizedSecret = rawJwtSecret.toLowerCase();
+const blockedSecrets = new Set(['netviz-secret-key-change-in-production', 'netviz-dev-secret-key-change-me']);
+
+if (blockedSecrets.has(rawJwtSecret)) {
+  console.error('[Gateway] APP_SECRET_KEY is using an insecure default value. Set a unique secret.');
+  process.exit(1);
+}
+
+if (normalizedSecret.includes('change') || normalizedSecret.includes('placeholder') || normalizedSecret.includes('secret')) {
+  console.error('[Gateway] APP_SECRET_KEY appears to be a placeholder. Provide a unique, random secret.');
+  process.exit(1);
+}
+
+if (rawJwtSecret.length < 32) {
+  console.error('[Gateway] APP_SECRET_KEY must be at least 32 characters long.');
+  process.exit(1);
+}
+
+const JWT_SECRET = rawJwtSecret;
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: !LOCALHOST_ONLY,
+  sameSite: 'strict',
+  path: '/'
+};
+
+const escapeHtml = (value = '') =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 // Middleware
 app.use(cookieParser());
@@ -168,7 +210,7 @@ const getLoginPageHTML = (error = '') => `
       <p>OSPF Network Topology Visualizer</p>
     </div>
 
-    ${error ? `<div class="error">${error}</div>` : ''}
+    ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
 
     <form method="POST" action="/gateway/login">
       <div class="form-group">
@@ -221,6 +263,9 @@ const authMiddleware = (req, res, next) => {
   const decoded = validateToken(token);
 
   if (!decoded) {
+    if (token) {
+      res.clearCookie('netviz_gateway_token', COOKIE_OPTIONS);
+    }
     // Return login page for unauthenticated users
     return res.send(getLoginPageHTML());
   }
@@ -256,26 +301,18 @@ app.post('/gateway/login', async (req, res) => {
       return res.send(getLoginPageHTML(data.error || 'Invalid credentials'));
     }
 
-    // Set gateway cookie with the JWT token
     res.cookie('netviz_gateway_token', data.token, {
-      httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
-      sameSite: 'lax',
+      ...COOKIE_OPTIONS,
       maxAge: (data.expiresIn || 3600) * 1000
     });
 
-    // Send page that sets localStorage and redirects (bridges gateway auth to React)
     res.send(`
       <!DOCTYPE html>
       <html>
       <head><title>Authenticating...</title></head>
       <body>
         <script>
-          // Store auth data in localStorage for React app
-          localStorage.setItem('netviz_auth_token', '${data.token}');
-          localStorage.setItem('netviz_auth_user', '${JSON.stringify(data.user).replace(/'/g, "\\'")}');
-          // Redirect to app
-          window.location.href = '/';
+          window.location.replace('/');
         </script>
         <p>Authenticating... If not redirected, <a href="/">click here</a>.</p>
       </body>
@@ -289,17 +326,14 @@ app.post('/gateway/login', async (req, res) => {
 
 // Logout
 app.get('/gateway/logout', (req, res) => {
-  res.clearCookie('netviz_gateway_token');
-  // Clear localStorage and redirect
+  res.clearCookie('netviz_gateway_token', COOKIE_OPTIONS);
   res.send(`
     <!DOCTYPE html>
     <html>
     <head><title>Logging out...</title></head>
     <body>
       <script>
-        localStorage.removeItem('netviz_auth_token');
-        localStorage.removeItem('netviz_auth_user');
-        window.location.href = '/';
+        window.location.replace('/');
       </script>
       <p>Logging out... If not redirected, <a href="/">click here</a>.</p>
     </body>
@@ -340,7 +374,7 @@ app.use(
 // ============================================================================
 // START SERVER
 // ============================================================================
-app.listen(GATEWAY_PORT, '0.0.0.0', () => {
+app.listen(GATEWAY_PORT, LISTEN_HOST, () => {
   console.log('');
   console.log('============================================================');
   console.log('  NetViz Pro Gateway Server (Protected Access)');
@@ -349,11 +383,14 @@ app.listen(GATEWAY_PORT, '0.0.0.0', () => {
   console.log(`  Gateway Port: ${GATEWAY_PORT} (public-facing)`);
   console.log(`  Vite Internal: ${VITE_INTERNAL_PORT} (localhost only)`);
   console.log(`  Auth Server: ${AUTH_SERVER_PORT}`);
+  console.log(`  Host: ${LISTEN_HOST}`);
+  console.log(`  Access: ${LOCALHOST_ONLY ? 'Localhost only' : 'Network accessible'}`);
   console.log('');
   console.log('  Security Features:');
   console.log('  - Server-side authentication required');
   console.log('  - No content served without valid login');
   console.log('  - Session cookies with JWT validation');
+  console.log(`  - SameSite=strict cookies; Secure=${!LOCALHOST_ONLY}`);
   console.log('');
   console.log('  Access: http://localhost:' + GATEWAY_PORT);
   console.log('============================================================');

@@ -58,14 +58,6 @@ const AUTH_API_URL = getAuthApiUrl();
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // ============================================================================
-// STORAGE KEYS
-// ============================================================================
-const STORAGE_KEYS = {
-  TOKEN: 'netviz_auth_token',
-  USER: 'netviz_auth_user'
-};
-
-// ============================================================================
 // PROVIDER
 // ============================================================================
 interface AuthProviderProps {
@@ -98,7 +90,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await fetch(`${AUTH_API_URL}${endpoint}`, {
         ...options,
-        headers
+        headers,
+        credentials: 'include'
       });
 
       const data = await response.json();
@@ -116,39 +109,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [token]);
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from session cookie
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-      const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+      try {
+        const response = await fetch(`${AUTH_API_URL}/auth/validate`, {
+          method: 'GET',
+          credentials: 'include'
+        });
 
-      if (storedToken && storedUser) {
-        try {
-          // Validate token with server
-          const response = await fetch(`${AUTH_API_URL}/auth/validate`, {
-            headers: {
-              'Authorization': `Bearer ${storedToken}`
-            }
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setToken(storedToken);
-            setUser(data.user);
-          } else {
-            // Token invalid, clear storage
-            localStorage.removeItem(STORAGE_KEYS.TOKEN);
-            localStorage.removeItem(STORAGE_KEYS.USER);
-          }
-        } catch (err) {
-          // Server not available or error
-          console.error('[Auth] Failed to validate session:', err);
-          localStorage.removeItem(STORAGE_KEYS.TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.USER);
+        if (response.ok) {
+          const data = await response.json();
+          setToken(data.token || null);
+          setUser(data.user || null);
+        } else if (response.status === 401) {
+          setToken(null);
+          setUser(null);
         }
+      } catch (err) {
+        console.error('[Auth] Failed to validate session:', err);
+        setToken(null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
     initAuth();
@@ -168,10 +152,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (data.success) {
         setToken(data.token);
         setUser(data.user);
-
-        // Store in localStorage
-        localStorage.setItem(STORAGE_KEYS.TOKEN, data.token);
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
 
         return true;
       } else {
@@ -199,8 +179,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear state regardless of API call result
       setToken(null);
       setUser(null);
-      localStorage.removeItem(STORAGE_KEYS.TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER);
     }
   };
 
@@ -224,7 +202,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           forcePasswordChange: false
         };
         setUser(updatedUser);
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updatedUser));
       }
 
       return { success: true };
@@ -241,7 +218,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const data = await apiCall('/auth/me');
       setUser(data);
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data));
     } catch (err) {
       console.error('[Auth] Failed to refresh user:', err);
     }
