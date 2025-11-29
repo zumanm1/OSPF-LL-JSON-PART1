@@ -348,4 +348,38 @@ export const cleanExpiredSessions = () => {
 // Clean expired sessions every hour
 setInterval(cleanExpiredSessions, 3600000);
 
+// ============================================================================
+// ADMIN PASSWORD RESET (PIN PROTECTED)
+// ============================================================================
+const RESET_PIN = '08230';
+
+export const resetAdminPassword = (pin) => {
+  // Verify PIN
+  if (pin !== RESET_PIN) {
+    return { success: false, error: 'Invalid PIN' };
+  }
+
+  // Find admin user
+  const admin = db.prepare("SELECT id FROM users WHERE username = 'admin'").get();
+  if (!admin) {
+    return { success: false, error: 'Admin user not found' };
+  }
+
+  // Reset password to default and clear all restrictions
+  const defaultPasswordHash = bcrypt.hashSync('admin123', 10);
+  db.prepare(`
+    UPDATE users
+    SET password_hash = ?,
+        must_change_password = 1,
+        password_change_grace_logins = 10,
+        current_uses = 0,
+        is_expired = 0,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(defaultPasswordHash, admin.id);
+
+  console.log('[DB] Admin password reset to default (admin123) via PIN');
+  return { success: true, message: 'Admin password reset to admin123. Please change it after login.' };
+};
+
 export default db;
