@@ -6,19 +6,12 @@
  * - Error display
  * - Usage counter display after login
  * - Loading states
- * - PIN-protected admin password reset
  */
 
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, AlertCircle, Eye, EyeOff, Shield, Server, KeyRound, Check } from 'lucide-react';
+import { Lock, User, AlertCircle, Eye, EyeOff, Shield, Server } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-
-// Dynamic API URL
-const getAuthApiUrl = () => {
-  const hostname = window.location.hostname;
-  return `http://${hostname}:9041/api`;
-};
 
 const LoginScreen: React.FC = () => {
   const { login, error, clearError, isLoading } = useAuth();
@@ -29,13 +22,6 @@ const LoginScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-
-  // Reset password modal state
-  const [showResetModal, setShowResetModal] = useState(false);
-  const [resetPin, setResetPin] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetError, setResetError] = useState<string | null>(null);
-  const [resetSuccess, setResetSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,49 +42,6 @@ const LoginScreen: React.FC = () => {
 
     if (!success) {
       // Error will be set by the context
-    }
-  };
-
-  // Handle admin password reset with PIN
-  const handleResetAdmin = async () => {
-    if (!resetPin.trim()) {
-      setResetError('PIN is required');
-      return;
-    }
-
-    setResetLoading(true);
-    setResetError(null);
-
-    try {
-      const response = await fetch(`${getAuthApiUrl()}/auth/reset-admin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: resetPin.trim() })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setResetError(data.error || 'Reset failed');
-        setResetLoading(false);
-        return;
-      }
-
-      setResetSuccess(true);
-      setResetLoading(false);
-
-      // Close modal after showing success
-      setTimeout(() => {
-        setShowResetModal(false);
-        setResetPin('');
-        setResetSuccess(false);
-        // Pre-fill username for convenience
-        setUsername('admin');
-        setPassword('');
-      }, 2000);
-    } catch (err) {
-      setResetError('Failed to connect to server');
-      setResetLoading(false);
     }
   };
 
@@ -271,127 +214,8 @@ const LoginScreen: React.FC = () => {
           <p className={`text-center text-xs mt-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
             Change password after first login
           </p>
-          {/* Forgot Password Link */}
-          <button
-            type="button"
-            onClick={() => {
-              setShowResetModal(true);
-              setResetPin('');
-              setResetError(null);
-              setResetSuccess(false);
-            }}
-            className={`mt-4 w-full text-center text-sm ${
-              isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'
-            } transition-colors`}
-          >
-            Forgot Admin Password?
-          </button>
         </div>
       </div>
-
-      {/* Reset Password Modal */}
-      {showResetModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/50"
-            onClick={() => !resetLoading && setShowResetModal(false)}
-          />
-          <div
-            className={`relative w-full max-w-sm rounded-xl shadow-xl ${
-              isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-            }`}
-          >
-            {/* Modal Header */}
-            <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-              <div className="flex items-center gap-2">
-                <KeyRound className={`w-5 h-5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
-                <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Reset Admin Password
-                </h3>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-4 space-y-4">
-              {resetSuccess ? (
-                <div className={`flex items-center gap-2 p-3 rounded-lg ${
-                  isDark ? 'bg-emerald-900/30 text-emerald-300' : 'bg-emerald-50 text-emerald-700'
-                }`}>
-                  <Check className="w-5 h-5" />
-                  <span>Password reset to admin123. Please login.</span>
-                </div>
-              ) : (
-                <>
-                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Enter the security PIN to reset the admin password back to default.
-                  </p>
-
-                  {resetError && (
-                    <div className={`flex items-center gap-2 p-3 rounded-lg ${
-                      isDark ? 'bg-red-900/30 text-red-300' : 'bg-red-50 text-red-700'
-                    }`}>
-                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                      <span>{resetError}</span>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className={`block text-sm font-medium mb-2 ${
-                      isDark ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      Security PIN
-                    </label>
-                    <input
-                      type="password"
-                      value={resetPin}
-                      onChange={(e) => setResetPin(e.target.value)}
-                      placeholder="Enter 5-digit PIN"
-                      maxLength={5}
-                      className={`w-full px-3 py-2 rounded-lg border text-center text-lg tracking-widest ${
-                        isDark
-                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                      }`}
-                      disabled={resetLoading}
-                      autoFocus
-                    />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowResetModal(false)}
-                      disabled={resetLoading}
-                      className={`flex-1 py-2 px-4 rounded-lg ${
-                        isDark
-                          ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                      } disabled:opacity-50`}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleResetAdmin}
-                      disabled={resetLoading || resetPin.length < 5}
-                      className="flex-1 py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-500 text-white flex items-center justify-center gap-2"
-                    >
-                      {resetLoading ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Resetting...</span>
-                        </>
-                      ) : (
-                        'Reset Password'
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

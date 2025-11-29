@@ -32,8 +32,7 @@ import {
   getLoginHistory,
   createSession,
   validateSession,
-  deleteSession,
-  resetAdminPassword
+  deleteSession
 } from './database.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -357,28 +356,6 @@ app.get('/api/admin/users/:id/history', requireAuth, requireAdmin, (req, res) =>
   const { id } = req.params;
   const history = getLoginHistory(parseInt(id));
   res.json(history);
-});
-
-// ============================================================================
-// ADMIN PASSWORD RESET (PIN PROTECTED - NO AUTH REQUIRED)
-// ============================================================================
-app.post('/api/auth/reset-admin', (req, res) => {
-  const { pin } = req.body;
-
-  if (!pin) {
-    return res.status(400).json({ error: 'PIN is required' });
-  }
-
-  const result = resetAdminPassword(pin);
-
-  if (!result.success) {
-    return res.status(400).json({ error: result.error });
-  }
-
-  res.json({
-    success: true,
-    message: result.message
-  });
 });
 
 // ============================================================================
