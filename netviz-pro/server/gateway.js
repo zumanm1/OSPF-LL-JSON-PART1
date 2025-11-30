@@ -351,51 +351,22 @@ app.get('/gateway/logout', (req, res) => {
 // ============================================================================
 // PROXY API REQUESTS TO AUTH SERVER (BEFORE auth middleware)
 // ============================================================================
-// CRITICAL: This must come BEFORE authMiddleware so /api routes bypass gateway auth
-// Use filter function to match /api/* routes and preserve full path
-app.use(
-  createProxyMiddleware({
-    target: `http://127.0.0.1:${AUTH_SERVER_PORT}`,
-    changeOrigin: false, // Keep origin to preserve cookies
-    // Filter: only proxy requests starting with /api (not just /)
-    filter: (pathname, req) => {
-      try {
-        const shouldProxy = pathname.startsWith('/api/') || pathname === '/api';
-        if (shouldProxy) {
-          console.log(`[Gateway] Filter matched: ${pathname}`);
-        }
-        return shouldProxy;
-      } catch (error) {
-        console.error('[Gateway] Filter error:', error);
-        return false;
-      }
-    },
-    // CRITICAL: Forward cookies from browser to auth server
-    onProxyReq: (proxyReq, req, res) => {
-      try {
-        // Forward cookies from the original request
-        if (req.headers.cookie) {
-          proxyReq.setHeader('Cookie', req.headers.cookie);
-        }
-        console.log(`[Gateway] Proxying ${req.method} ${req.url} to auth server at ${AUTH_SERVER_PORT}`);
-      } catch (error) {
-        console.error('[Gateway] onProxyReq error:', error);
-      }
-    },
-    onProxyRes: (proxyRes, req, res) => {
-      try {
-        console.log(`[Gateway] Proxy response: ${proxyRes.statusCode} for ${req.url}`);
-      } catch (error) {
-        console.error('[Gateway] onProxyRes error:', error);
-      }
-    },
-    onError: (err, req, res) => {
-      console.error('[Gateway] Auth API proxy error:', err.message);
-      res.status(502).json({ error: 'Auth server unavailable' });
-    },
-    logLevel: 'debug'
-  })
-);
+// CRITICAL: Mount at /api to proxy API requests to auth server
+app.use('/api', createProxyMiddleware({
+  target: `http://127.0.0.1:${AUTH_SERVER_PORT}`,
+  changeOrigin: false,
+  onProxyReq: (proxyReq, req, res) => {
+    // Forward cookies from the original request
+    if (req.headers.cookie) {
+      proxyReq.setHeader('Cookie', req.headers.cookie);
+    }
+    console.log(`[Gateway] Proxying ${req.method} ${req.url} to auth server`);
+  },
+  onError: (err, req, res) => {
+    console.error('[Gateway] Auth API proxy error:', err.message);
+    res.status(502).json({ error: 'Auth server unavailable' });
+  }
+}));
 
 // ============================================================================
 // APPLY AUTH MIDDLEWARE TO ALL NON-API ROUTES
