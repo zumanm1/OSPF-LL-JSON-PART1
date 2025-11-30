@@ -15,6 +15,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 
 import {
   createUser,
@@ -44,6 +45,16 @@ const PORT = parseInt(process.env.AUTH_PORT || '9041', 10);
 const HOST = process.env.AUTH_HOST || '0.0.0.0'; // Allow external access
 const LOCALHOST_ONLY = (process.env.LOCALHOST_ONLY || 'true').toLowerCase() === 'true';
 const LISTEN_HOST = LOCALHOST_ONLY ? '127.0.0.1' : HOST;
+
+// IP Allowlist - comma-separated list of allowed IPs/subnets
+const ALLOWED_IPS = process.env.ALLOWED_IPS
+  ? process.env.ALLOWED_IPS.split(',').map(ip => ip.trim()).filter(Boolean)
+  : null; // null = allow all (based on LOCALHOST_ONLY)
+
+// Additional CORS origins - comma-separated
+const ALLOWED_CORS_ORIGINS = process.env.ALLOWED_CORS_ORIGINS
+  ? process.env.ALLOWED_CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+  : [];
 
 const rawJwtSecret = process.env.APP_SECRET_KEY;
 if (!rawJwtSecret) {
@@ -89,7 +100,63 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Dynamic CORS - allow requests from any origin on port 9040
+// Helper function to check if IP matches pattern (supports CIDR notation)
+const ipMatchesPattern = (clientIP, pattern) => {
+  // Direct match
+  if (clientIP === pattern) return true;
+
+  // Handle IPv6 localhost variations
+  if (pattern === '127.0.0.1') {
+    if (clientIP === '::1' || clientIP === '::ffff:127.0.0.1') return true;
+  }
+
+  // CIDR notation support (basic implementation)
+  if (pattern.includes('/')) {
+    const [subnet, bits] = pattern.split('/');
+    const subnetParts = subnet.split('.').map(Number);
+    const clientParts = clientIP.replace('::ffff:', '').split('.').map(Number);
+
+    if (subnetParts.length !== 4 || clientParts.length !== 4) return false;
+
+    const mask = parseInt(bits, 10);
+    const subnetInt = (subnetParts[0] << 24) | (subnetParts[1] << 16) | (subnetParts[2] << 8) | subnetParts[3];
+    const clientInt = (clientParts[0] << 24) | (clientParts[1] << 16) | (clientParts[2] << 8) | clientParts[3];
+    const maskInt = ~((1 << (32 - mask)) - 1);
+
+    return (subnetInt & maskInt) === (clientInt & maskInt);
+  }
+
+  return false;
+};
+
+// IP Allowlist middleware
+const checkIPAllowlist = (req, res, next) => {
+  // If no allowlist configured, allow all (based on LOCALHOST_ONLY)
+  if (!ALLOWED_IPS || ALLOWED_IPS.length === 0) {
+    return next();
+  }
+
+  const clientIP = req.ip || req.connection?.remoteAddress || '';
+  const normalizedIP = clientIP.replace('::ffff:', ''); // Handle IPv4-mapped IPv6
+
+  // Check if client IP matches any allowed pattern
+  const isAllowed = ALLOWED_IPS.some(pattern => ipMatchesPattern(normalizedIP, pattern));
+
+  if (!isAllowed) {
+    console.warn(`[Auth] Access denied for IP: ${clientIP} (not in allowlist)`);
+    return res.status(403).json({
+      error: 'Access denied',
+      message: 'Your IP address is not authorized to access this service'
+    });
+  }
+
+  next();
+};
+
+// Apply IP allowlist to all routes
+app.use(checkIPAllowlist);
+
+// Dynamic CORS - allow requests from any origin on port 9040 + custom origins
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl)
@@ -102,6 +169,11 @@ app.use(cors({
 
     // Also allow localhost variations
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+
+    // Check custom allowed origins
+    if (ALLOWED_CORS_ORIGINS.includes(origin)) {
       return callback(null, true);
     }
 
@@ -525,7 +597,6 @@ app.post('/api/auth/reset-admin', (req, res) => {
   }
 
   // Generate a cryptographically secure random temporary password
-  const crypto = await import('crypto');
   const tempPassword = crypto.randomBytes(16).toString('base64').slice(0, 20) + '!Aa1';
 
   updatePassword(adminUser.id, tempPassword);
@@ -573,13 +644,24 @@ app.listen(PORT, LISTEN_HOST, () => {
   console.log(`  Access: ${LOCALHOST_ONLY ? 'Localhost only' : 'Network accessible'}`);
   console.log(`  Session Timeout: ${SESSION_TIMEOUT}s`);
   console.log('');
+  console.log('  Access Control:');
+  if (ALLOWED_IPS && ALLOWED_IPS.length > 0) {
+    console.log(`  - IP Allowlist: ${ALLOWED_IPS.join(', ')}`);
+  } else {
+    console.log(`  - IP Allowlist: All IPs allowed (no restriction)`);
+  }
+  if (ALLOWED_CORS_ORIGINS.length > 0) {
+    console.log(`  - Extra CORS Origins: ${ALLOWED_CORS_ORIGINS.join(', ')}`);
+  }
+  console.log('');
   console.log('  Security Features:');
   console.log('  - Password hashing with bcrypt');
   console.log('  - JWT session tokens (secure HttpOnly cookies)');
   console.log('  - Usage counter with configurable expiry');
   console.log('  - Admin-only password recovery');
   console.log(`  - SameSite=strict cookies; Secure=${!LOCALHOST_ONLY}`);
-  console.log('  - CORS protection (port 9040 origins only)');
+  console.log('  - CORS protection (port 9040 origins + custom)');
+  console.log('  - IP-based access control (optional)');
   console.log('');
   console.log('============================================================');
 });
