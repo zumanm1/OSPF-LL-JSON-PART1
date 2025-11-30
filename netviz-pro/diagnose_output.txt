@@ -1,0 +1,11 @@
+🔍 DIAGNOSING PORT 9040
+
+═══════════════════════════════════════════════════════════
+
+1️⃣  Attempting to load http://localhost:9040...
+
+
+❌ ERROR: Navigation timeout of 30000 ms exceeded
+📸 Error screenshot saved
+[REQUEST FAILED] http://localhost:9040/
+   Failure: net::ERR_ABORTED
