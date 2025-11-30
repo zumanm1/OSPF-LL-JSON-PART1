@@ -98,7 +98,7 @@ async function comprehensiveValidation() {
       page.click('button[type="submit"]')
     ]);
     
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     const currentUrl = page.url();
     console.log(`   Current URL: ${currentUrl}`);
@@ -108,7 +108,7 @@ async function comprehensiveValidation() {
     // TEST 5: Check if Main App Loaded
     console.log('\n📋 TEST 5: Verify Main Application');
     console.log('─────────────────────────────────────────────────────────');
-    await page.waitForTimeout(3000);
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     const bodyText = await page.evaluate(() => document.body.innerText);
     const hasContent = bodyText.length > 200;
@@ -196,7 +196,7 @@ async function comprehensiveValidation() {
     console.log('═══════════════════════════════════════════════════════════\n');
     
     console.log('Keeping browser open for 10 seconds for inspection...');
-    await page.waitForTimeout(10000);
+    await new Promise(resolve => setTimeout(resolve, 10000));
     await browser.close();
     
     process.exit(testsFailed === 0 ? 0 : 1);
