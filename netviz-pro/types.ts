@@ -22,6 +22,9 @@ export interface NetworkNode {
   vy?: number;
   fx?: number | null;
   fy?: number | null;
+  // Extended properties for high-level view aggregation
+  nodeCount?: number;         // Number of actual nodes aggregated in this country node
+  aggregatedNodeIds?: string[]; // IDs of nodes aggregated into this country node
 }
 
 // Interface capacity types

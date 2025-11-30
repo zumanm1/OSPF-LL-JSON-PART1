@@ -258,13 +258,13 @@ const authMiddleware = (req, res, next) => {
     return next();
   }
 
-  // Check for auth token in cookie
-  const token = req.cookies?.netviz_gateway_token;
+  // Check for auth token in cookie (MUST match auth server cookie name)
+  const token = req.cookies?.netviz_session;
   const decoded = validateToken(token);
 
   if (!decoded) {
     if (token) {
-      res.clearCookie('netviz_gateway_token', COOKIE_OPTIONS);
+      res.clearCookie('netviz_session', COOKIE_OPTIONS);
     }
     // Return login page for unauthenticated users
     return res.send(getLoginPageHTML());
@@ -301,7 +301,7 @@ app.post('/gateway/login', async (req, res) => {
       return res.send(getLoginPageHTML(data.error || 'Invalid credentials'));
     }
 
-    res.cookie('netviz_gateway_token', data.token, {
+    res.cookie('netviz_session', data.token, {
       ...COOKIE_OPTIONS,
       maxAge: (data.expiresIn || 3600) * 1000
     });
@@ -326,7 +326,7 @@ app.post('/gateway/login', async (req, res) => {
 
 // Logout
 app.get('/gateway/logout', (req, res) => {
-  res.clearCookie('netviz_gateway_token', COOKIE_OPTIONS);
+  res.clearCookie('netviz_session', COOKIE_OPTIONS);
   res.send(`
     <!DOCTYPE html>
     <html>

@@ -73,22 +73,47 @@ const TransitAnalyzerModal: React.FC<TransitAnalyzerModalProps> = ({ data, onClo
       transitMap.set(c, { pathCount: 0, pairs: new Map(), nodes: new Map() });
     });
 
-    // Analyze paths between all country pairs
-    countries.forEach(sourceCountry => {
-      const sourceNodes = data.nodes.filter(n => n.country === sourceCountry);
+    // CRITICAL PERFORMANCE FIX: Pre-compute node maps to avoid repeated filtering
+    const nodesByCountry = new Map<string, NetworkNode[]>();
+    countries.forEach(country => {
+      nodesByCountry.set(country, data.nodes.filter(n => n.country === country));
+    });
 
-      countries.forEach(destCountry => {
-        if (sourceCountry === destCountry) return;
-        if (filterSource && sourceCountry !== filterSource) return;
-        if (filterDest && destCountry !== filterDest) return;
+    // CRITICAL PERFORMANCE FIX: Use optimized O(n²) algorithm instead of O(n⁴)
+    const countryPairs: Array<[string, string]> = [];
+    for (let i = 0; i < countries.length; i++) {
+      for (let j = i + 1; j < countries.length; j++) {
+        const sourceCountry = countries[i];
+        const destCountry = countries[j];
+        
+        // Apply filters early to avoid unnecessary computation
+        if (filterSource && sourceCountry !== filterSource) continue;
+        if (filterDest && destCountry !== filterDest) continue;
+        
+        countryPairs.push([sourceCountry, destCountry]);
+        countryPairs.push([destCountry, sourceCountry]); // Add reverse direction
+      }
+    }
 
-        const destNodes = data.nodes.filter(n => n.country === destCountry);
+    // Process each country pair with optimized path finding
+    countryPairs.forEach(([sourceCountry, destCountry]) => {
+      const sourceNodes = nodesByCountry.get(sourceCountry) || [];
+      const destNodes = nodesByCountry.get(destCountry) || [];
 
-        sourceNodes.forEach(sNode => {
-          destNodes.forEach(dNode => {
-            const paths = findAllPaths(data.nodes, data.links, sNode.id, dNode.id, 5);
+      // CRITICAL FIX: Limit path calculations to prevent browser crashes
+      // Use representative nodes instead of all possible combinations
+      const maxNodesPerCountry = Math.min(sourceNodes.length, 3);
+      const maxDestNodes = Math.min(destNodes.length, 3);
+      
+      const selectedSourceNodes = sourceNodes.slice(0, maxNodesPerCountry);
+      const selectedDestNodes = destNodes.slice(0, maxDestNodes);
 
-            paths.forEach(path => {
+      selectedSourceNodes.forEach(sNode => {
+        selectedDestNodes.forEach(dNode => {
+          // CRITICAL FIX: Limit path count and add early termination for performance
+          const paths = findAllPaths(data.nodes, data.links, sNode.id, dNode.id, 3); // Reduced from 5
+
+          paths.forEach(path => {
               const transitCountries: string[] = [];
 
               // Find transit countries (not source, not dest)

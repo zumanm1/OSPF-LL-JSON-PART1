@@ -95,14 +95,11 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect, onLinkS
             is_active: true,
             node_type: 'country_aggregate',
             role: 'unknown', // Use a valid role
-            // Custom property for count
-            // @ts-ignore
             nodeCount: 0
           });
         }
         const cNode = countryMap.get(country)!;
-        // @ts-ignore
-        cNode.nodeCount++;
+        cNode.nodeCount = (cNode.nodeCount || 0) + 1;
       });
       nodes = Array.from(countryMap.values());
 
@@ -455,20 +452,18 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect, onLinkS
   };
 
   const handleZoomIn = () => {
-    if (svgRef.current) {
+    if (svgRef.current && zoomRef.current) {
       d3.select(svgRef.current).transition().duration(300).call(
-        // @ts-ignore
-        d3.zoom().on("zoom", (e) => d3.select(svgRef.current).select('g').attr('transform', e.transform)).scaleBy,
+        zoomRef.current.scaleBy,
         1.2
       );
     }
   }
 
   const handleZoomOut = () => {
-    if (svgRef.current) {
+    if (svgRef.current && zoomRef.current) {
       d3.select(svgRef.current).transition().duration(300).call(
-        // @ts-ignore
-        d3.zoom().on("zoom", (e) => d3.select(svgRef.current).select('g').attr('transform', e.transform)).scaleBy,
+        zoomRef.current.scaleBy,
         0.8
       );
     }

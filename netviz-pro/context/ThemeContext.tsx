@@ -11,11 +11,26 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check local storage first
-    const savedTheme = localStorage.getItem('netviz_theme');
-    if (savedTheme === 'dark' || savedTheme === 'light') {
-      return savedTheme;
+    // CRITICAL FIX: Safe localStorage access with error handling and SSR safety
+    if (typeof window === 'undefined') {
+      return 'dark'; // Default for SSR
     }
+    
+    try {
+      const savedTheme = localStorage.getItem('netviz_theme');
+      if (savedTheme === 'dark' || savedTheme === 'light') {
+        return savedTheme;
+      }
+    } catch (error) {
+      console.warn('Error reading theme from localStorage, using default:', error);
+      // Attempt to clear corrupted data
+      try {
+        localStorage.removeItem('netviz_theme');
+      } catch (clearError) {
+        console.error('Failed to clear corrupted theme data:', clearError);
+      }
+    }
+    
     // Default to dark mode as per original design
     return 'dark';
   });
@@ -24,7 +39,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
-    localStorage.setItem('netviz_theme', theme);
+    
+    // CRITICAL FIX: Safe localStorage write with error handling
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('netviz_theme', theme);
+      } catch (error) {
+        console.warn('Error saving theme to localStorage:', error);
+        // Gracefully continue without persistence
+      }
+    }
   }, [theme]);
 
   const toggleTheme = () => {

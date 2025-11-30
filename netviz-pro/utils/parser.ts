@@ -227,13 +227,22 @@ export const parsePyATSData = (rawData: any): NetworkData => {
                    // Link already exists - this is the reverse direction
                    const existingLink = links[existingLinkIndex];
                    
-                   // If existing link is Target->Source, we're seeing Source->Target now
+                   // CRITICAL FIX: If existing link is Target->Source, we're seeing Source->Target now
+                   // We need to update the forward_cost of the existing link (which is actually Target->Source direction)
+                   // and set reverse_cost to the cost we just discovered
                    if (existingLink.source === targetId && existingLink.target === sourceId) {
-                       // Update the reverse cost of the existing link with our forward cost
-                       existingLink.reverse_cost = cost;
-                       existingLink.original_reverse_cost = cost;
-                       // Keep legacy cost field as forward cost
-                       existingLink.cost = existingLink.forward_cost;
+                       // The existing link represents Target->Source with forward_cost
+                       // We just discovered Source->Target cost, so update reverse_cost accordingly
+                       existingLink.reverse_cost = existingLink.forward_cost;  // Preserve original forward as reverse
+                       existingLink.original_reverse_cost = existingLink.original_forward_cost;
+                       
+                       // Update forward_cost to our newly discovered cost (Source->Target direction)
+                       existingLink.forward_cost = cost;
+                       existingLink.original_forward_cost = cost;
+                       
+                       // Update legacy cost field to match the new forward cost
+                       existingLink.cost = cost;
+                       existingLink.original_cost = cost;
                    }
                    // If existing link is Source->Target (exact duplicate), skip it
                }
