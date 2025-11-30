@@ -338,21 +338,25 @@ app.get('/gateway/logout', (req, res) => {
 });
 
 // ============================================================================
-// APPLY AUTH MIDDLEWARE TO ALL ROUTES
+// PROXY API REQUESTS TO AUTH SERVER (BEFORE auth middleware)
 // ============================================================================
-app.use(authMiddleware);
-
-// ============================================================================
-// PROXY API REQUESTS TO AUTH SERVER (no auth required for /api routes)
-// ============================================================================
+// CRITICAL: This must come BEFORE authMiddleware so /api routes bypass gateway auth
 app.use(
   '/api',
   createProxyMiddleware({
     target: `http://127.0.0.1:${AUTH_SERVER_PORT}`,
-    changeOrigin: true,
-    pathRewrite: (path, req) => {
-      // Preserve the full path including /api
-      return path;
+    changeOrigin: false, // Keep origin to preserve cookies
+    // CRITICAL: Preserve the /api prefix in the path
+    pathRewrite: {
+      '^/api': '/api' // Don't strip /api
+    },
+    // CRITICAL: Forward cookies from browser to auth server
+    onProxyReq: (proxyReq, req, res) => {
+      // Forward cookies from the original request
+      if (req.headers.cookie) {
+        proxyReq.setHeader('Cookie', req.headers.cookie);
+      }
+      console.log(`[Gateway] Proxying ${req.method} ${req.path} to auth server`);
     },
     onError: (err, req, res) => {
       console.error('[Gateway] Auth API proxy error:', err.message);
@@ -360,6 +364,11 @@ app.use(
     }
   })
 );
+
+// ============================================================================
+// APPLY AUTH MIDDLEWARE TO ALL NON-API ROUTES
+// ============================================================================
+app.use(authMiddleware);
 
 // ============================================================================
 // PROXY TO VITE (only reached if authenticated)
