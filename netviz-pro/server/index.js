@@ -34,7 +34,8 @@ import {
   validateSession,
   deleteSession,
   checkPasswordChangeRequired,
-  getLoginHistory
+  getLoginHistory,
+  checkExpiry
 } from './database.js';
 
 import {

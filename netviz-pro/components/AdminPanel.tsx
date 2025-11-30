@@ -37,15 +37,11 @@ interface AdminPanelProps {
 }
 
 // ============================================================================
-// API HELPER (DYNAMIC - USES CURRENT HOST)
+// API HELPER (USES GATEWAY PROXY - SAME ORIGIN)
 // ============================================================================
-const getAuthApiUrl = () => {
-  const hostname = window.location.hostname;
-  return `http://${hostname}:9041/api`;
-};
+const AUTH_API_URL = '/api';
 
 const apiCall = async (endpoint: string, token: string, options: RequestInit = {}) => {
-  const AUTH_API_URL = getAuthApiUrl();
   const response = await fetch(`${AUTH_API_URL}${endpoint}`, {
     ...options,
     headers: {

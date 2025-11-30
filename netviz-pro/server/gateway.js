@@ -78,6 +78,36 @@ const escapeHtml = (value = '') =>
 app.use(securityMiddleware);
 
 app.use(cookieParser());
+
+// ============================================================================
+// PROXY API REQUESTS TO AUTH SERVER (MUST BE BEFORE body parsers!)
+// ============================================================================
+// CRITICAL: This MUST come before express.json() to avoid consuming the request body
+// When mounted at /api, Express strips the /api prefix before passing to middleware
+// So we need to prepend /api back to the path before forwarding to auth server
+app.use('/api', createProxyMiddleware({
+  target: `http://127.0.0.1:${AUTH_SERVER_PORT}`,
+  changeOrigin: false,
+  pathRewrite: (path, req) => {
+    // Express strips /api when mounted at /api, so we need to add it back
+    // e.g., /auth/validate -> /api/auth/validate
+    const newPath = `/api${path}`;
+    console.log(`[Gateway] Proxying API: ${req.method} ${path} -> ${newPath}`);
+    return newPath;
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    // Forward cookies from the original request
+    if (req.headers.cookie) {
+      proxyReq.setHeader('Cookie', req.headers.cookie);
+    }
+  },
+  onError: (err, req, res) => {
+    console.error('[Gateway] Auth API proxy error:', err.message);
+    res.status(502).json({ error: 'Auth server unavailable' });
+  }
+}));
+
+// Body parsers - AFTER the API proxy so they don't consume the body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -296,35 +326,35 @@ app.post('/gateway/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.send(getLoginPageHTML('Username and password are required'));
-  }
-
-  try {
-    // Authenticate via auth server
-    const response = await fetch(`http://127.0.0.1:${AUTH_SERVER_PORT}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      return res.send(getLoginPageHTML(data.error || 'Invalid credentials'));
+    if (!username || !password) {
+      return res.send(getLoginPageHTML('Username and password are required'));
     }
 
-    res.cookie('netviz_session', data.token, {
-      ...COOKIE_OPTIONS,
-      maxAge: (data.expiresIn || 3600) * 1000
-    });
+    try {
+      // Authenticate via auth server
+      const response = await fetch(`http://127.0.0.1:${AUTH_SERVER_PORT}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-    // Use HTTP redirect instead of JavaScript redirect for better reliability
-    res.redirect('/');
-  } catch (err) {
-    console.error('[Gateway] Auth error:', err);
-    return res.send(getLoginPageHTML('Authentication server unavailable'));
-  }
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        return res.send(getLoginPageHTML(data.error || 'Invalid credentials'));
+      }
+
+      res.cookie('netviz_session', data.token, {
+        ...COOKIE_OPTIONS,
+        maxAge: (data.expiresIn || 3600) * 1000
+      });
+
+      // Use HTTP redirect instead of JavaScript redirect for better reliability
+      res.redirect('/');
+    } catch (err) {
+      console.error('[Gateway] Auth error:', err);
+      return res.send(getLoginPageHTML('Authentication server unavailable'));
+    }
   } catch (error) {
     console.error('[Gateway] Login route error:', error);
     return res.send(getLoginPageHTML('An error occurred during login'));
@@ -347,26 +377,6 @@ app.get('/gateway/logout', (req, res) => {
     </html>
   `);
 });
-
-// ============================================================================
-// PROXY API REQUESTS TO AUTH SERVER (BEFORE auth middleware)
-// ============================================================================
-// CRITICAL: Mount at /api to proxy API requests to auth server
-app.use('/api', createProxyMiddleware({
-  target: `http://127.0.0.1:${AUTH_SERVER_PORT}`,
-  changeOrigin: false,
-  onProxyReq: (proxyReq, req, res) => {
-    // Forward cookies from the original request
-    if (req.headers.cookie) {
-      proxyReq.setHeader('Cookie', req.headers.cookie);
-    }
-    console.log(`[Gateway] Proxying ${req.method} ${req.url} to auth server`);
-  },
-  onError: (err, req, res) => {
-    console.error('[Gateway] Auth API proxy error:', err.message);
-    res.status(502).json({ error: 'Auth server unavailable' });
-  }
-}));
 
 // ============================================================================
 // APPLY AUTH MIDDLEWARE TO ALL NON-API ROUTES

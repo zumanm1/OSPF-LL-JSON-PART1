@@ -14,11 +14,8 @@ import { useAuth } from '../context/AuthContext';
 import { Lock, User, AlertCircle, Eye, EyeOff, Shield, Server, KeyRound, Check } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
-// Dynamic API URL
-const getAuthApiUrl = () => {
-  const hostname = window.location.hostname;
-  return `http://${hostname}:9041/api`;
-};
+// Use gateway proxy for API calls (same origin, no CORS issues)
+const AUTH_API_URL = '/api';
 
 const LoginScreen: React.FC = () => {
   const { login, error, clearError, isLoading } = useAuth();
@@ -70,7 +67,7 @@ const LoginScreen: React.FC = () => {
     setResetError(null);
 
     try {
-      const response = await fetch(`${getAuthApiUrl()}/auth/reset-admin`, {
+      const response = await fetch(`${AUTH_API_URL}/auth/reset-admin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: resetPin.trim() })
