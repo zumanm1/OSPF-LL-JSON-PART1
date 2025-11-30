@@ -259,26 +259,32 @@ const validateToken = (token) => {
 };
 
 const authMiddleware = (req, res, next) => {
-  // Skip auth for gateway routes and API proxy routes
-  if (req.path.startsWith('/gateway/') || req.path.startsWith('/api/')) {
-    return next();
-  }
-
-  // Check for auth token in cookie (MUST match auth server cookie name)
-  const token = req.cookies?.netviz_session;
-  const decoded = validateToken(token);
-
-  if (!decoded) {
-    if (token) {
-      res.clearCookie('netviz_session', COOKIE_OPTIONS);
+  try {
+    // Skip auth for gateway routes and API proxy routes
+    if (req.path.startsWith('/gateway/') || req.path.startsWith('/api/')) {
+      return next();
     }
-    // Return login page for unauthenticated users
-    return res.send(getLoginPageHTML());
-  }
 
-  // Token valid - allow request to proceed
-  req.user = decoded;
-  next();
+    // Check for auth token in cookie (MUST match auth server cookie name)
+    const token = req.cookies?.netviz_session;
+    const decoded = validateToken(token);
+
+    if (!decoded) {
+      if (token) {
+        res.clearCookie('netviz_session', COOKIE_OPTIONS);
+      }
+      // Return login page for unauthenticated users
+      return res.send(getLoginPageHTML());
+    }
+
+    // Token valid - allow request to proceed
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error('[Gateway] Auth middleware error:', error);
+    // On error, show login page
+    return res.send(getLoginPageHTML('An error occurred. Please try again.'));
+  }
 };
 
 // ============================================================================
@@ -287,7 +293,8 @@ const authMiddleware = (req, res, next) => {
 
 // Login form submission
 app.post('/gateway/login', async (req, res) => {
-  const { username, password } = req.body;
+  try {
+    const { username, password } = req.body;
 
   if (!username || !password) {
     return res.send(getLoginPageHTML('Username and password are required'));
@@ -318,6 +325,10 @@ app.post('/gateway/login', async (req, res) => {
     console.error('[Gateway] Auth error:', err);
     return res.send(getLoginPageHTML('Authentication server unavailable'));
   }
+  } catch (error) {
+    console.error('[Gateway] Login route error:', error);
+    return res.send(getLoginPageHTML('An error occurred during login'));
+  }
 });
 
 // Logout
@@ -341,33 +352,60 @@ app.get('/gateway/logout', (req, res) => {
 // PROXY API REQUESTS TO AUTH SERVER (BEFORE auth middleware)
 // ============================================================================
 // CRITICAL: This must come BEFORE authMiddleware so /api routes bypass gateway auth
+// Use filter function to match /api/* routes and preserve full path
 app.use(
-  '/api',
   createProxyMiddleware({
     target: `http://127.0.0.1:${AUTH_SERVER_PORT}`,
     changeOrigin: false, // Keep origin to preserve cookies
-    // CRITICAL: Preserve the /api prefix in the path
-    pathRewrite: {
-      '^/api': '/api' // Don't strip /api
+    // Filter: only proxy requests starting with /api (not just /)
+    filter: (pathname, req) => {
+      try {
+        const shouldProxy = pathname.startsWith('/api/') || pathname === '/api';
+        if (shouldProxy) {
+          console.log(`[Gateway] Filter matched: ${pathname}`);
+        }
+        return shouldProxy;
+      } catch (error) {
+        console.error('[Gateway] Filter error:', error);
+        return false;
+      }
     },
     // CRITICAL: Forward cookies from browser to auth server
     onProxyReq: (proxyReq, req, res) => {
-      // Forward cookies from the original request
-      if (req.headers.cookie) {
-        proxyReq.setHeader('Cookie', req.headers.cookie);
+      try {
+        // Forward cookies from the original request
+        if (req.headers.cookie) {
+          proxyReq.setHeader('Cookie', req.headers.cookie);
+        }
+        console.log(`[Gateway] Proxying ${req.method} ${req.url} to auth server at ${AUTH_SERVER_PORT}`);
+      } catch (error) {
+        console.error('[Gateway] onProxyReq error:', error);
       }
-      console.log(`[Gateway] Proxying ${req.method} ${req.path} to auth server`);
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      try {
+        console.log(`[Gateway] Proxy response: ${proxyRes.statusCode} for ${req.url}`);
+      } catch (error) {
+        console.error('[Gateway] onProxyRes error:', error);
+      }
     },
     onError: (err, req, res) => {
       console.error('[Gateway] Auth API proxy error:', err.message);
       res.status(502).json({ error: 'Auth server unavailable' });
-    }
+    },
+    logLevel: 'debug'
   })
 );
 
 // ============================================================================
 // APPLY AUTH MIDDLEWARE TO ALL NON-API ROUTES
 // ============================================================================
+// Debug middleware to see all requests
+app.use((req, res, next) => {
+  console.log(`[Gateway] Request: ${req.method} ${req.path}`);
+  next();
+});
+
 app.use(authMiddleware);
 
 // ============================================================================

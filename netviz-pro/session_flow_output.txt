@@ -1,0 +1,42 @@
+🔍 TESTING SESSION FLOW
+
+1️⃣  Loading login page...
+✅ Login page loaded
+
+2️⃣  Logging in...
+✅ Login submitted
+
+3️⃣  Checking cookies...
+Cookies: [ 'netviz_session=eyJhbGciOiJIUzI1NiIs...' ]
+
+4️⃣  Network Activity:
+
+API Requests:
+   GET http://localhost:9040/api/auth/validate
+      Cookie: netviz_session=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ...
+   GET http://localhost:9040/api/auth/validate
+
+API Responses:
+   302 http://localhost:9040/gateway/login
+   404 http://localhost:9040/api/auth/validate
+      Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<
+   404 http://localhost:9040/api/auth/validate
+      Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<
+
+📸 Screenshot: SESSION_FLOW_TEST.png
+
+Browser will close in 10 seconds...
