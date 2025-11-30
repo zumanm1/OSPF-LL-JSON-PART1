@@ -34,12 +34,20 @@ echo -e "${GREEN}✓ Node.js: $(node --version)${NC}"
 echo -e "${GREEN}✓ npm: $(npm --version)${NC}"
 echo ""
 
-# Install dependencies
-echo "Installing npm dependencies..."
-npm install
+# Install dependencies (including production security packages)
+echo "Installing base dependencies..."
+npm install --legacy-peer-deps
 
 if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ Failed to install dependencies${NC}"
+    echo -e "${RED}✗ Failed to install base dependencies${NC}"
+    exit 1
+fi
+
+echo "Installing production security packages..."
+npm install helmet express-rate-limit --legacy-peer-deps
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}✗ Failed to install security packages${NC}"
     exit 1
 fi
 

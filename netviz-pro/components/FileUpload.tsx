@@ -4,6 +4,42 @@ import { NetworkData, HostnameMappingConfig } from '../types';
 import { parsePyATSData } from '../utils/parser';
 import { applyHostnameMappings, detectRoleFromHostname, parseHostname } from '../utils/hostnameMapper';
 
+// CRITICAL PRODUCTION SECURITY: Schema validation function
+const validateTopologySchema = (json: any): boolean => {
+  // Check for PyATS format
+  if (json.files && Array.isArray(json.files)) {
+    return json.files.every((file: any) => 
+      typeof file === 'object' && 
+      typeof file.filename === 'string' && 
+      typeof file.content === 'string'
+    );
+  }
+  
+  // Check for direct topology format
+  if (json.nodes && Array.isArray(json.nodes) && json.links && Array.isArray(json.links)) {
+    // Validate nodes
+    if (json.nodes.length === 0) return false;
+    if (!json.nodes.every((node: any) => 
+      typeof node.id === 'string' && 
+      typeof node.name === 'string' && 
+      typeof node.hostname === 'string'
+    )) return false;
+    
+    // Validate links
+    return json.links.every((link: any) => 
+      typeof link.source === 'string' && 
+      typeof link.target === 'string'
+    );
+  }
+  
+  // Check for OSPF Designer format
+  if (json.type === 'ospf-topology' && json.data && json.data.nodes && json.data.links) {
+    return validateTopologySchema(json.data);
+  }
+  
+  return false;
+};
+
 interface FileUploadProps {
   onDataLoaded: (data: NetworkData) => void;
   hostnameMappingConfig?: HostnameMappingConfig;
@@ -20,24 +56,74 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingCo
   };
 
   const processFile = (file: File) => {
+    // CRITICAL PRODUCTION SECURITY: File size validation (prevent DoS)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB.`);
+      return;
+    }
+
+    // CRITICAL PRODUCTION SECURITY: File type validation
+    const ALLOWED_TYPES = ['application/json', 'text/plain'];
+    if (!ALLOWED_TYPES.includes(file.type) && !file.name.endsWith('.json')) {
+      alert('Invalid file type. Only JSON files are allowed.');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const json = JSON.parse(e.target?.result as string);
+        const rawContent = e.target?.result as string;
+        
+        // CRITICAL PRODUCTION SECURITY: Content size validation
+        if (rawContent.length > 50 * 1024 * 1024) { // 50MB JSON content limit
+          alert('JSON content too large. Maximum is 50MB.');
+          return;
+        }
+
+        // CRITICAL PRODUCTION SECURITY: Safe JSON parsing with prototype pollution protection
+        let json;
+        try {
+          json = JSON.parse(rawContent);
+        } catch (parseError) {
+          alert('Invalid JSON format. Please check your file.');
+          return;
+        }
+
+        // CRITICAL PRODUCTION SECURITY: Prototype pollution prevention
+        if (json.__proto__ !== Object.prototype || 
+            json.constructor !== Object ||
+            json.hasOwnProperty('__proto__') ||
+            json.hasOwnProperty('constructor') ||
+            json.hasOwnProperty('prototype')) {
+          alert('Invalid JSON structure. Prototype pollution detected.');
+          return;
+        }
+
+        // CRITICAL PRODUCTION SECURITY: Deep freeze to prevent prototype pollution
+        const sanitizedJson = JSON.parse(JSON.stringify(json));
+        Object.freeze(sanitizedJson);
+
+        // CRITICAL PRODUCTION SECURITY: Schema validation
+        if (!validateTopologySchema(sanitizedJson)) {
+          alert('Invalid topology schema. Required fields missing or malformed.');
+          return;
+        }
+
         let processedData: NetworkData;
 
         // Check for PyATS format (contains 'files' array)
-        if (json.files && Array.isArray(json.files)) {
+        if (sanitizedJson.files && Array.isArray(sanitizedJson.files)) {
           console.log("Detected PyATS format, parsing...");
-          processedData = parsePyATSData(json);
+          processedData = parsePyATSData(sanitizedJson);
           // Update metadata source
           if (!processedData.metadata) processedData.metadata = {};
           processedData.metadata.data_source = `Uploaded: ${file.name} (PyATS)`;
         }
         // Check for OSPF Designer format (data nested under 'data' property)
-        else if (json.type === 'ospf-topology' && json.data && json.data.nodes && Array.isArray(json.data.nodes)) {
+        else if (sanitizedJson.type === 'ospf-topology' && sanitizedJson.data && sanitizedJson.data.nodes && Array.isArray(sanitizedJson.data.nodes)) {
           console.log("Detected OSPF Designer format, parsing...");
-          const designerData = json.data;
+          const designerData = sanitizedJson.data;
 
           // Convert nodes - they are already in standard format
           const convertedNodes = designerData.nodes.map((node: any) => ({
@@ -66,7 +152,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingCo
           processedData = {
             nodes: convertedNodes,
             links: convertedLinks,
-            timestamp: json.exportedAt || new Date().toISOString(),
+            timestamp: sanitizedJson.exportedAt || new Date().toISOString(),
             metadata: {
               node_count: convertedNodes.length,
               edge_count: convertedLinks.length,
@@ -77,11 +163,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingCo
           };
         }
         // Check for format with physical_links (new database export format)
-        else if (json.nodes && Array.isArray(json.nodes) && json.physical_links && Array.isArray(json.physical_links)) {
+        else if (sanitizedJson.nodes && Array.isArray(sanitizedJson.nodes) && sanitizedJson.physical_links && Array.isArray(sanitizedJson.physical_links)) {
           console.log("Detected physical_links format, converting...");
 
           // Convert nodes: map 'status' to 'is_active', 'hostname' to 'loopback_ip'
-          const convertedNodes = json.nodes.map((node: any) => ({
+          const convertedNodes = sanitizedJson.nodes.map((node: any) => ({
             ...node,
             is_active: node.status === 'up' || node.is_active === true,
             loopback_ip: node.loopback_ip || node.hostname || 'Unknown',
@@ -89,7 +175,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingCo
           }));
 
           // Convert physical_links to standard link format with asymmetric costs
-          const convertedLinks = json.physical_links.map((plink: any) => ({
+          const convertedLinks = sanitizedJson.physical_links.map((plink: any) => ({
             source: plink.router_a,
             target: plink.router_b,
             source_interface: plink.interface_a || 'Unknown',
@@ -104,25 +190,25 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingCo
           processedData = {
             nodes: convertedNodes,
             links: convertedLinks,
-            timestamp: json.timestamp || new Date().toISOString(),
+            timestamp: sanitizedJson.timestamp || new Date().toISOString(),
             metadata: {
-              ...json.metadata,
+              ...sanitizedJson.metadata,
               data_source: `Uploaded: ${file.name} (physical_links)`,
-              asymmetric_count: json.metadata?.asymmetric_count || convertedLinks.filter((l: any) => l.is_asymmetric).length,
+              asymmetric_count: sanitizedJson.metadata?.asymmetric_count || convertedLinks.filter((l: any) => l.is_asymmetric).length,
             }
           };
         }
         // Check for Standard NetworkData format
-        else if (json.nodes && Array.isArray(json.nodes)) {
+        else if (sanitizedJson.nodes && Array.isArray(sanitizedJson.nodes)) {
           // Convert nodes: ensure is_active exists
-          const convertedNodes = json.nodes.map((node: any) => ({
+          const convertedNodes = sanitizedJson.nodes.map((node: any) => ({
             ...node,
             is_active: node.status === 'up' || node.is_active === true || node.is_active === undefined,
             loopback_ip: node.loopback_ip || node.hostname || 'Unknown',
           }));
 
           // Process links to detect asymmetric costs from directional links
-          let links = json.links || [];
+          let links = sanitizedJson.links || [];
 
           // If links have directional format (A->B and B->A as separate entries), consolidate
           if (links.length > 0 && !links[0].reverse_cost) {
@@ -156,9 +242,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, hostnameMappingCo
           processedData = {
             nodes: convertedNodes,
             links: links,
-            timestamp: json.timestamp,
+            timestamp: sanitizedJson.timestamp,
             metadata: {
-              ...json.metadata,
+              ...sanitizedJson.metadata,
               data_source: `Uploaded: ${file.name}`,
             }
           };

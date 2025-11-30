@@ -114,32 +114,31 @@ const TransitAnalyzerModal: React.FC<TransitAnalyzerModalProps> = ({ data, onClo
           const paths = findAllPaths(data.nodes, data.links, sNode.id, dNode.id, 3); // Reduced from 5
 
           paths.forEach(path => {
-              const transitCountries: string[] = [];
+            const transitCountries: string[] = [];
 
-              // Find transit countries (not source, not dest)
-              for (let i = 1; i < path.nodes.length - 1; i++) {
-                const node = data.nodes.find(n => n.id === path.nodes[i]);
-                if (node && node.country !== sourceCountry && node.country !== destCountry) {
-                  if (!transitCountries.includes(node.country)) {
-                    transitCountries.push(node.country);
-                  }
-
-                  // Update transit map
-                  const transit = transitMap.get(node.country)!;
-                  transit.pathCount++;
-
-                  const pairKey = `${sourceCountry}->${destCountry}`;
-                  transit.pairs.set(pairKey, (transit.pairs.get(pairKey) || 0) + 1);
-                  transit.nodes.set(node.id, (transit.nodes.get(node.id) || 0) + 1);
+            // Find transit countries (not source, not dest)
+            for (let i = 1; i < path.nodes.length - 1; i++) {
+              const node = data.nodes.find(n => n.id === path.nodes[i]);
+              if (node && node.country !== sourceCountry && node.country !== destCountry) {
+                if (!transitCountries.includes(node.country)) {
+                  transitCountries.push(node.country);
                 }
-              }
 
-              allPathsWithTransit.push({
-                ...path,
-                sourceCountry,
-                destCountry,
-                transitCountries
-              });
+                // Update transit map
+                const transit = transitMap.get(node.country)!;
+                transit.pathCount++;
+
+                const pairKey = `${sourceCountry}->${destCountry}`;
+                transit.pairs.set(pairKey, (transit.pairs.get(pairKey) || 0) + 1);
+                transit.nodes.set(node.id, (transit.nodes.get(node.id) || 0) + 1);
+              }
+            }
+
+            allPathsWithTransit.push({
+              ...path,
+              sourceCountry,
+              destCountry,
+              transitCountries
             });
           });
         });

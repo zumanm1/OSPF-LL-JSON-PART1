@@ -28,14 +28,22 @@ import {
   resetUserUsage,
   verifyPassword,
   incrementUsage,
-  checkExpiry,
-  checkPasswordChangeRequired,
   recordLogin,
-  getLoginHistory,
+  cleanExpiredSessions,
   createSession,
   validateSession,
-  deleteSession
+  deleteSession,
+  checkPasswordChangeRequired,
+  getLoginHistory
 } from './database.js';
+
+import {
+  securityMiddleware,
+  authSecurityMiddleware,
+  adminSecurityMiddleware,
+  uploadSecurityMiddleware,
+  pinProtectedRateLimit
+} from './securityMiddleware.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
@@ -96,6 +104,9 @@ const COOKIE_OPTIONS = {
 // ============================================================================
 // MIDDLEWARE
 // ============================================================================
+// CRITICAL PRODUCTION SECURITY: Apply security middleware first
+app.use(securityMiddleware);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -241,7 +252,7 @@ const requireAdmin = (req, res, next) => {
 // ============================================================================
 
 // Login
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authSecurityMiddleware, (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -398,13 +409,13 @@ app.post('/api/auth/change-password', requireAuth, (req, res) => {
 // ============================================================================
 
 // Get all users (admin only)
-app.get('/api/admin/users', requireAuth, requireAdmin, (req, res) => {
+app.get('/api/admin/users', requireAuth, requireAdmin, adminSecurityMiddleware, (req, res) => {
   const users = getAllUsers();
   res.json(users);
 });
 
 // Create new user (admin only)
-app.post('/api/admin/users', requireAuth, requireAdmin, (req, res) => {
+app.post('/api/admin/users', requireAuth, requireAdmin, adminSecurityMiddleware, (req, res) => {
   const { username, password, role = 'user', maxUses = 10, expiryEnabled = true } = req.body;
 
   if (!username || !password) {
@@ -457,7 +468,7 @@ app.delete('/api/admin/users/:id', requireAuth, requireAdmin, (req, res) => {
 });
 
 // Reset user password (admin only) - PASSWORD RECOVERY
-app.post('/api/admin/users/:id/reset-password', requireAuth, requireAdmin, (req, res) => {
+app.post('/api/admin/users/:id/reset-password', requireAuth, requireAdmin, adminSecurityMiddleware, (req, res) => {
   const { id } = req.params;
   const { newPassword } = req.body;
 
@@ -475,7 +486,7 @@ app.post('/api/admin/users/:id/reset-password', requireAuth, requireAdmin, (req,
 });
 
 // Reset user usage counter (admin only)
-app.post('/api/admin/users/:id/reset-usage', requireAuth, requireAdmin, (req, res) => {
+app.post('/api/admin/users/:id/reset-usage', requireAuth, requireAdmin, adminSecurityMiddleware, (req, res) => {
   const { id } = req.params;
 
   const user = getUserById(parseInt(id));
@@ -488,7 +499,7 @@ app.post('/api/admin/users/:id/reset-usage', requireAuth, requireAdmin, (req, re
 });
 
 // Get user login history (admin only)
-app.get('/api/admin/users/:id/history', requireAuth, requireAdmin, (req, res) => {
+app.get('/api/admin/users/:id/history', requireAuth, requireAdmin, adminSecurityMiddleware, (req, res) => {
   const { id } = req.params;
   const history = getLoginHistory(parseInt(id));
   res.json(history);
@@ -531,7 +542,7 @@ const ADMIN_RESET_ALLOWED_IPS = process.env.ADMIN_RESET_ALLOWED_IPS
   ? process.env.ADMIN_RESET_ALLOWED_IPS.split(',').map(ip => ip.trim())
   : null; // null = allow all IPs (less secure but more flexible)
 
-app.post('/api/auth/reset-admin', (req, res) => {
+app.post('/api/auth/reset-admin', pinProtectedRateLimit, (req, res) => {
   const { pin } = req.body;
   const clientIP = req.ip || req.connection.remoteAddress;
   const now = Date.now();

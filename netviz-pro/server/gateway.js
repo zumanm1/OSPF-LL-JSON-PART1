@@ -10,12 +10,15 @@
  */
 
 import express from 'express';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+
+// CRITICAL PRODUCTION SECURITY: Import security middleware
+import { securityMiddleware } from './securityMiddleware.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
@@ -71,6 +74,9 @@ const escapeHtml = (value = '') =>
     .replace(/'/g, '&#39;');
 
 // Middleware
+// CRITICAL PRODUCTION SECURITY: Apply security middleware first
+app.use(securityMiddleware);
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
