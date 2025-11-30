@@ -6,9 +6,17 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
       server: {
-        port: 9042, // Internal Vite dev server (proxied through gateway on 9040)
+        port: 9040, // Main application port
         strictPort: true,
-        host: '127.0.0.1', // Internal only - accessed via gateway
+        host: '127.0.0.1',
+        proxy: {
+          // Proxy API requests to auth server
+          '/api': {
+            target: 'http://127.0.0.1:9041',
+            changeOrigin: true,
+            secure: false
+          }
+        }
       },
       plugins: [react()],
       define: {
