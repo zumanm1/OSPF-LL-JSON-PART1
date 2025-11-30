@@ -259,8 +259,8 @@ const validateToken = (token) => {
 };
 
 const authMiddleware = (req, res, next) => {
-  // Skip auth for gateway login routes
-  if (req.path.startsWith('/gateway/')) {
+  // Skip auth for gateway routes and API proxy routes
+  if (req.path.startsWith('/gateway/') || req.path.startsWith('/api/')) {
     return next();
   }
 
@@ -312,18 +312,8 @@ app.post('/gateway/login', async (req, res) => {
       maxAge: (data.expiresIn || 3600) * 1000
     });
 
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head><title>Authenticating...</title></head>
-      <body>
-        <script>
-          window.location.replace('/');
-        </script>
-        <p>Authenticating... If not redirected, <a href="/">click here</a>.</p>
-      </body>
-      </html>
-    `);
+    // Use HTTP redirect instead of JavaScript redirect for better reliability
+    res.redirect('/');
   } catch (err) {
     console.error('[Gateway] Auth error:', err);
     return res.send(getLoginPageHTML('Authentication server unavailable'));
@@ -351,6 +341,25 @@ app.get('/gateway/logout', (req, res) => {
 // APPLY AUTH MIDDLEWARE TO ALL ROUTES
 // ============================================================================
 app.use(authMiddleware);
+
+// ============================================================================
+// PROXY API REQUESTS TO AUTH SERVER (no auth required for /api routes)
+// ============================================================================
+app.use(
+  '/api',
+  createProxyMiddleware({
+    target: `http://127.0.0.1:${AUTH_SERVER_PORT}`,
+    changeOrigin: true,
+    pathRewrite: (path, req) => {
+      // Preserve the full path including /api
+      return path;
+    },
+    onError: (err, req, res) => {
+      console.error('[Gateway] Auth API proxy error:', err.message);
+      res.status(502).json({ error: 'Auth server unavailable' });
+    }
+  })
+);
 
 // ============================================================================
 // PROXY TO VITE (only reached if authenticated)

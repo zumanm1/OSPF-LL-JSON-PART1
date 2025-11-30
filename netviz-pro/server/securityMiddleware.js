@@ -13,27 +13,37 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
 // CRITICAL PRODUCTION SECURITY: Content Security Policy for D3.js app
+// NOTE: Development mode requires 'unsafe-inline' and 'unsafe-eval' for Vite HMR
+// TODO: Tighten CSP for production deployment (remove unsafe-* directives)
 export const cspConfig = {
   directives: {
     defaultSrc: ["'self'"],
-    scriptSrc: ["'self'"], // No inline scripts - prevents XSS
-    styleSrc: ["'self'", "'unsafe-inline'"], // D3.js requires inline styles
+    scriptSrc: [
+      "'self'", 
+      "'unsafe-inline'",  // Required for Vite dev mode HMR
+      "'unsafe-eval'",    // Required for Vite dev mode
+      "https://cdn.tailwindcss.com",  // TailwindCSS CDN
+      "https://aistudiocdn.com"  // React CDN from importmap
+    ],
+    styleSrc: ["'self'", "'unsafe-inline'"], // D3.js and inline styles
     imgSrc: ["'self'", "data:", "https:"],
     connectSrc: [
       "'self'", 
+      "ws://localhost:9042",  // Vite HMR WebSocket
+      "ws://127.0.0.1:9042",  // Vite HMR WebSocket
       process.env.AUTH_URL || 'http://localhost:9041', 
       process.env.VITE_URL || 'http://localhost:9042',
-      process.env.GATEWAY_URL || 'http://localhost:9040'
-    ], // Environment-driven API connections
-    fontSrc: ["'self'"],
-    objectSrc: ["'none'"], // Prevents object embedding attacks
-    baseUri: ["'self'"], // Prevents base tag attacks
-    frameAncestors: ["'none'"], // Prevents clickjacking
+      process.env.GATEWAY_URL || 'http://localhost:9040',
+      "https://aistudiocdn.com"  // React CDN
+    ],
+    fontSrc: ["'self'", "data:"],
+    objectSrc: ["'none'"],
+    baseUri: ["'self'"],
+    frameAncestors: ["'none'"],
     formAction: ["'self'"],
     frameSrc: ["'none'"],
     manifestSrc: ["'self'"],
-    workerSrc: ["'self'"],
-    upgradeInsecureRequests: [] // For future HTTPS deployment
+    workerSrc: ["'self'", "blob:"]  // Allow blob: for workers
   }
 };
 

@@ -42,15 +42,11 @@ export interface AuthContextType {
 }
 
 // ============================================================================
-// API CONFIGURATION (DYNAMIC - USES CURRENT HOST)
+// API CONFIGURATION (USES GATEWAY PROXY)
 // ============================================================================
-// Use the same hostname as the current page, but on port 9041 for auth API
-const getAuthApiUrl = () => {
-  const hostname = window.location.hostname;
-  return `http://${hostname}:9041/api`;
-};
-
-const AUTH_API_URL = getAuthApiUrl();
+// Use the gateway (same origin) which proxies /api requests to auth server
+// This ensures cookies work correctly since it's same-origin
+const AUTH_API_URL = '/api';
 
 // ============================================================================
 // CONTEXT
