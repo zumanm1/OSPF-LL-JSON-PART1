@@ -1,74 +1,62 @@
 #!/bin/bash
-# ============================================================================
-# NetViz Pro - Stop Script
-# ============================================================================
-# Stops all running servers
-# ============================================================================
 
-# Colors
-RED='\033[0;31m'
+################################################################################
+# NetViz Pro - Stop All Servers
+################################################################################
+
+# Color codes
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
+RED='\033[0;31m'
 NC='\033[0m'
 
+echo "════════════════════════════════════════════════════════════════"
+echo "  NetViz Pro - Stopping Servers"
+echo "════════════════════════════════════════════════════════════════"
 echo ""
-echo -e "${BLUE}Stopping NetViz Pro...${NC}"
-echo ""
-
-# Helper function to check and stop port
-stop_port() {
-    local PORT=$1
-    local PID=""
-
-    # Try different methods to find PID
-    if command -v lsof &> /dev/null; then
-        PID=$(lsof -ti:$PORT 2>/dev/null)
-    elif command -v fuser &> /dev/null; then
-        PID=$(fuser $PORT/tcp 2>/dev/null | awk '{print $1}')
-    elif command -v ss &> /dev/null; then
-        PID=$(ss -tlnp "sport = :$PORT" 2>/dev/null | grep -oP 'pid=\K\d+')
-    elif command -v netstat &> /dev/null; then
-        PID=$(netstat -tlnp 2>/dev/null | grep ":$PORT " | awk '{print $7}' | cut -d'/' -f1)
-    fi
-
-    if [ -n "$PID" ]; then
-        # Get process name for display
-        PROCESS_NAME=$(ps -p $PID -o comm= 2>/dev/null || echo "unknown")
-
-        # Try graceful shutdown first, then force
-        kill $PID 2>/dev/null
-        sleep 0.5
-
-        # Check if still running
-        if kill -0 $PID 2>/dev/null; then
-            kill -9 $PID 2>/dev/null
-        fi
-
-        echo -e "  ${GREEN}✓${NC} Stopped port $PORT (PID: $PID, Process: $PROCESS_NAME)"
-        return 0
-    fi
-    return 1
-}
 
 STOPPED=0
 
-for PORT in 9040 9041; do
-    if stop_port $PORT; then
+# Stop auth server
+if [ -f ".pids/auth-server.pid" ]; then
+    AUTH_PID=$(cat .pids/auth-server.pid)
+    if kill -0 $AUTH_PID 2>/dev/null; then
+        kill $AUTH_PID
+        echo -e "${GREEN}✓ Auth server stopped (PID: $AUTH_PID)${NC}"
         STOPPED=$((STOPPED + 1))
+    else
+        echo -e "${YELLOW}⚠ Auth server not running${NC}"
     fi
-done
-
-# Also try to kill any remaining npm/node processes for netviz-pro
-if command -v pkill &> /dev/null; then
-    pkill -f "netviz-pro" 2>/dev/null && echo -e "  ${GREEN}✓${NC} Cleaned up related processes"
+    rm -f .pids/auth-server.pid
 fi
+
+# Stop Vite server
+if [ -f ".pids/vite.pid" ]; then
+    VITE_PID=$(cat .pids/vite.pid)
+    if kill -0 $VITE_PID 2>/dev/null; then
+        kill $VITE_PID
+        echo -e "${GREEN}✓ Vite server stopped (PID: $VITE_PID)${NC}"
+        STOPPED=$((STOPPED + 1))
+    else
+        echo -e "${YELLOW}⚠ Vite server not running${NC}"
+    fi
+    rm -f .pids/vite.pid
+fi
+
+# Fallback: kill by process name
+if [ $STOPPED -eq 0 ]; then
+    echo -e "${YELLOW}No PID files found. Searching for running processes...${NC}"
+    
+    # Kill node processes running server/index.js
+    pkill -f "node server/index.js" && echo -e "${GREEN}✓ Auth server stopped${NC}"
+    
+    # Kill vite processes
+    pkill -f "vite" && echo -e "${GREEN}✓ Vite server stopped${NC}"
+fi
+
+# Clean up PID directory
+rm -rf .pids
 
 echo ""
-
-if [ $STOPPED -eq 0 ]; then
-    echo -e "${YELLOW}No running servers found.${NC}"
-else
-    echo -e "${GREEN}Stopped $STOPPED server(s).${NC}"
-fi
+echo -e "${GREEN}✓ All servers stopped${NC}"
 echo ""

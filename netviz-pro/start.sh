@@ -1,133 +1,98 @@
 #!/bin/bash
-# ============================================================================
-# NetViz Pro - Start Script
-# ============================================================================
-# Starts all servers in background
-# ============================================================================
 
-# Colors
-RED='\033[0;31m'
+################################################################################
+# NetViz Pro - Start Development Server
+################################################################################
+
+# Color codes
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_DIR="$SCRIPT_DIR"
-LOG_FILE="/tmp/netviz-pro.log"
-
-echo ""
-echo -e "${BLUE}Starting NetViz Pro...${NC}"
+echo "════════════════════════════════════════════════════════════════"
+echo "  NetViz Pro - Starting Development Server"
+echo "════════════════════════════════════════════════════════════════"
 echo ""
 
-# Change to app directory
-cd "$APP_DIR" 2>/dev/null || {
-    echo -e "${RED}Error: Cannot find app directory${NC}"
-    exit 1
-}
-
-# Check package.json exists
-if [ ! -f "package.json" ]; then
-    echo -e "${RED}Error: package.json not found${NC}"
-    echo "Please run prep.sh first"
+# Check if .env.local exists
+if [ ! -f ".env.local" ]; then
+    echo -e "${RED}✗ .env.local not found!${NC}"
+    echo ""
+    echo "Please create .env.local with your configuration:"
+    echo "  cp .env.local.example .env.local"
+    echo "  # Edit .env.local with your secure credentials"
+    echo ""
     exit 1
 fi
 
-# Check node_modules
+echo -e "${GREEN}✓ Configuration found${NC}"
+echo ""
+
+# Check if node_modules exists
 if [ ! -d "node_modules" ]; then
-    echo -e "${YELLOW}Installing dependencies...${NC}"
+    echo -e "${YELLOW}⚠ Dependencies not installed. Running npm install...${NC}"
     npm install
+    echo ""
 fi
 
-# Helper function to check port
-check_port() {
-    local PORT=$1
-    if command -v lsof &> /dev/null; then
-        lsof -ti:$PORT 2>/dev/null
-    elif command -v fuser &> /dev/null; then
-        fuser $PORT/tcp 2>/dev/null | awk '{print $1}'
-    elif command -v ss &> /dev/null; then
-        ss -tlnp "sport = :$PORT" 2>/dev/null | grep -oP 'pid=\K\d+'
-    else
-        echo ""
+# Create PID directory
+mkdir -p .pids
+
+# Function to cleanup on exit
+cleanup() {
+    echo ""
+    echo -e "${YELLOW}Shutting down servers...${NC}"
+    
+    if [ -f ".pids/auth-server.pid" ]; then
+        AUTH_PID=$(cat .pids/auth-server.pid)
+        kill $AUTH_PID 2>/dev/null && echo -e "${GREEN}✓ Auth server stopped${NC}"
+        rm -f .pids/auth-server.pid
     fi
+    
+    if [ -f ".pids/vite.pid" ]; then
+        VITE_PID=$(cat .pids/vite.pid)
+        kill $VITE_PID 2>/dev/null && echo -e "${GREEN}✓ Vite server stopped${NC}"
+        rm -f .pids/vite.pid
+    fi
+    
+    echo -e "${GREEN}✓ Servers stopped${NC}"
+    exit 0
 }
 
-# Check if already running
-ALREADY_RUNNING=0
-for PORT in 9040 9041; do
-    if [ -n "$(check_port $PORT)" ]; then
-        ALREADY_RUNNING=$((ALREADY_RUNNING + 1))
-    fi
-done
+# Trap SIGINT and SIGTERM
+trap cleanup SIGINT SIGTERM
 
-if [ $ALREADY_RUNNING -eq 2 ]; then
-    echo -e "${YELLOW}NetViz Pro is already running!${NC}"
-    echo ""
-    echo "  App:      http://localhost:9040"
-    echo "  Auth API: http://127.0.0.1:9041"
-    echo ""
-    echo "  Use ./stop.sh to stop, or ./restart.sh to restart"
-    exit 0
-fi
+# Start auth server
+echo -e "${BLUE}Starting auth server...${NC}"
+node server/index.js &
+AUTH_PID=$!
+echo $AUTH_PID > .pids/auth-server.pid
+echo -e "${GREEN}✓ Auth server started (PID: $AUTH_PID)${NC}"
 
-# Clear log and start
-> "$LOG_FILE"
-# Use full path for npm to ensure nohup can find it in non-interactive shells
-NPM_PATH=$(which npm 2>/dev/null || echo "/usr/bin/npm")
-nohup "$NPM_PATH" run dev:full >> "$LOG_FILE" 2>&1 &
-APP_PID=$!
+# Wait a moment for auth server to initialize
+sleep 2
 
-echo -e "  Starting servers (PID: $APP_PID)..."
-echo ""
-
-# Wait for startup
-WAIT_TIME=0
-MAX_WAIT=30
-printf "  Waiting: ["
-
-while [ $WAIT_TIME -lt $MAX_WAIT ]; do
-    APP=$(check_port 9040)
-    AUTH=$(check_port 9041)
-
-    if [ -n "$APP" ] && [ -n "$AUTH" ]; then
-        break
-    fi
-
-    printf "."
-    sleep 1
-    WAIT_TIME=$((WAIT_TIME + 1))
-done
-printf "] ${WAIT_TIME}s\n"
-echo ""
-
-# Check results
-SERVICES_UP=0
-
-if [ -n "$(check_port 9040)" ]; then
-    echo -e "  ${GREEN}✓${NC} App (9040) running"
-    SERVICES_UP=$((SERVICES_UP + 1))
-else
-    echo -e "  ${RED}✗${NC} App (9040) not running"
-fi
-
-if [ -n "$(check_port 9041)" ]; then
-    echo -e "  ${GREEN}✓${NC} Auth API (9041) running"
-    SERVICES_UP=$((SERVICES_UP + 1))
-else
-    echo -e "  ${RED}✗${NC} Auth API (9041) not running"
-fi
+# Start Vite dev server
+echo -e "${BLUE}Starting Vite dev server...${NC}"
+npm run dev &
+VITE_PID=$!
+echo $VITE_PID > .pids/vite.pid
+echo -e "${GREEN}✓ Vite server started (PID: $VITE_PID)${NC}"
 
 echo ""
-
-if [ $SERVICES_UP -eq 2 ]; then
-    echo -e "${GREEN}NetViz Pro started successfully!${NC}"
-    echo ""
-    echo "  Access: http://localhost:9040"
-    echo "  Logs:   tail -f $LOG_FILE"
-else
-    echo -e "${YELLOW}Warning: Only $SERVICES_UP/2 services running${NC}"
-    echo ""
-    echo "  Check logs: tail -f $LOG_FILE"
-fi
+echo "════════════════════════════════════════════════════════════════"
+echo -e "${GREEN}✓ NetViz Pro is running!${NC}"
+echo "════════════════════════════════════════════════════════════════"
 echo ""
+echo "Services:"
+echo "  • Auth Server:  http://localhost:9041"
+echo "  • Gateway:      http://localhost:9040"
+echo "  • Development:  http://localhost:5173 (Vite default)"
+echo ""
+echo "Press Ctrl+C to stop all servers"
+echo ""
+
+# Wait for both processes
+wait $AUTH_PID $VITE_PID
