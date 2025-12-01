@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:full": "node server/index.js & vite",
+    "dev:full": "node server/index.js & node server/gateway.js & vite",
     "server": "node server/index.js",
+    "gateway": "node server/gateway.js",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node server/index.js & vite preview"
+    "start": "node server/index.js & node server/gateway.js & vite preview"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

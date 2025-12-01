@@ -327,13 +327,44 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect, onLinkS
         .attr("repeatCount", "indefinite");
     }
 
-    // Link Labels (Count for high-level)
+    // Link Labels (Count for high-level, OSPF Cost for detailed)
     if (viewMode === 'high-level') {
       linkGroup.append("text")
         .text(d => (d as any).linkCount)
         .attr("text-anchor", "middle")
         .attr("fill", theme === 'dark' ? "#9ca3af" : "#4b5563")
         .attr("font-size", "10px");
+    } else {
+      // OSPF Cost Labels for detailed view
+      // Show forward/reverse costs if asymmetric, otherwise just the cost
+      linkGroup.append("text")
+        .attr("class", "link-label")
+        .attr("text-anchor", "middle")
+        .attr("dy", -6)
+        .attr("font-size", "9px")
+        .attr("font-weight", "600")
+        .attr("fill", d => {
+          if (isDimmed(d)) return "transparent";
+          if (isInPath(d)) return "#3b82f6";
+          if (d.status !== 'up') return LINK_COLOR_DOWN;
+          if (d.is_modified) return "#d946ef";
+          const fwd = d.forward_cost !== undefined ? d.forward_cost : d.cost;
+          const rev = d.reverse_cost !== undefined ? d.reverse_cost : fwd;
+          if (d.is_asymmetric || (fwd !== rev)) return LINK_COLOR_ASYMMETRIC;
+          return theme === 'dark' ? "#60a5fa" : "#2563eb";
+        })
+        .attr("paint-order", "stroke")
+        .attr("stroke", theme === 'dark' ? "#111827" : "#ffffff")
+        .attr("stroke-width", "3px")
+        .text(d => {
+          const fwd = d.forward_cost !== undefined ? d.forward_cost : d.cost;
+          const rev = d.reverse_cost !== undefined ? d.reverse_cost : fwd;
+          // Show both directions if asymmetric
+          if (d.is_asymmetric || (fwd !== rev)) {
+            return `${fwd}↔${rev}`;
+          }
+          return fwd || d.cost || '';
+        });
     }
 
     const node = g.append("g")
@@ -423,11 +454,10 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect, onLinkS
         .attr("x2", d => (d.target as NetworkNode).x!)
         .attr("y2", d => (d.target as NetworkNode).y!);
 
-      if (viewMode === 'high-level') {
-        linkGroup.selectAll("text")
-          .attr("x", d => ((d as any).source.x + (d as any).target.x) / 2)
-          .attr("y", d => ((d as any).source.y + (d as any).target.y) / 2);
-      }
+      // Position link labels at midpoint of each link
+      linkGroup.selectAll("text")
+        .attr("x", d => ((d as any).source.x + (d as any).target.x) / 2)
+        .attr("y", d => ((d as any).source.y + (d as any).target.y) / 2);
 
       node.attr("transform", d => `translate(${d.x},${d.y})`);
     });
@@ -438,7 +468,7 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect, onLinkS
     }
 
     return () => { simulation.stop(); };
-  }, [data, dimensions, highlightedPath, activeCountries, onNodeSelect, selectedNode, onLinkSelect, viewMode]);
+  }, [data, dimensions, highlightedPath, activeCountries, onNodeSelect, selectedNode, onLinkSelect, viewMode, theme]);
 
   const handleTogglePause = () => {
     if (simulationRef.current) {
