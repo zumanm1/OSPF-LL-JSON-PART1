@@ -1,58 +1,121 @@
 # NetViz Pro
 
-**OSPF Network Topology Visualizer** - A powerful tool for visualizing and analyzing OSPF network topologies with 14 analysis modals.
+A comprehensive OSPF (Open Shortest Path First) network topology visualizer and analyzer with enterprise-grade authentication and 14 analysis modals.
 
-## Quick Installation (Any Machine)
+## 🚀 Quick Start
+
+### 1. Clone the Repository
 
 ```bash
-# Clone the repository
-git clone https://github.com/zumanm1/OSPF2-LL-JSON.git
-cd OSPF2-LL-JSON/netviz-pro
-
-# Install dependencies
-npm install
-
-# Start the application
-npm run dev
+git clone https://github.com/zumanm1/OSPF-LL-JSON-PART1.git
+cd OSPF-LL-JSON-PART1/netviz-pro
 ```
 
-Open: **http://localhost:9040** (or your server IP:9040)
+### 2. Using Bash Scripts (Recommended)
 
-## System Requirements
+```bash
+# One-liner to install and start
+./netviz.sh install && ./netviz.sh deps && ./netviz.sh start
+
+# Or step by step:
+./netviz.sh install   # Install Node.js if not present
+./netviz.sh deps      # Install npm dependencies (frontend + backend)
+./netviz.sh start     # Start servers (Gateway: 9040, Auth: 9041, Vite: 9042)
+```
+
+### 3. Manual Installation
+
+```bash
+# Install frontend dependencies
+npm install --legacy-peer-deps
+
+# Setup environment
+cp .env.local.example .env.local
+# Edit .env.local with your secure credentials
+
+# Start development servers
+npm run dev           # Vite only (port 9042)
+# OR for full stack with auth:
+./start.sh            # All servers with authentication
+```
+
+**Access the app:** http://localhost:9040
+
+**Default credentials:** See `.env.local` for admin username/password
+
+## 📜 Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `./netviz.sh install` | Install system requirements (Node.js, npm) |
+| `./netviz.sh deps` | Install project dependencies (frontend + backend) |
+| `./netviz.sh start` | Start Gateway (9040), Auth (9041), and Vite (9042) servers |
+| `./netviz.sh stop` | Stop all running servers |
+| `./netviz.sh restart` | Restart all servers |
+| `./netviz.sh status` | Show system and server status |
+| `./netviz.sh logs` | View server logs (tail -f) |
+| `./netviz.sh clean` | Clean build artifacts and node_modules |
+| `./netviz.sh build` | Build for production |
+
+### Individual Scripts
+
+```bash
+./install.sh          # Install dependencies only
+./start.sh            # Start all servers (foreground)
+./stop.sh             # Stop all servers
+./status.sh           # Check status
+./restart.sh          # Restart servers
+```
+
+### Script Options
+
+```bash
+# Start on a custom port
+./netviz.sh start -p 3000
+
+# Force reinstall dependencies
+./netviz.sh deps --force
+
+# Using environment variable
+NETVIZ_PORT=8080 ./netviz.sh start
+```
+
+## 🔐 Authentication System
+
+NetViz Pro includes enterprise-grade authentication:
+
+- **JWT-based sessions** with secure cookies
+- **Rate limiting** on auth endpoints
+- **Helmet security headers** (CSP, HSTS, X-Frame-Options)
+- **Admin panel** for user management
+- **Usage tracking** and expiry controls
+
+## 🛠️ System Requirements
 
 - **Node.js** v18.0.0+ (required)
 - **npm** v9.0.0+ (comes with Node.js)
 - Modern browser (Chrome, Firefox, Safari, Edge)
 
-### Install Node.js on Ubuntu/Debian
+### Install Node.js
 
+**Ubuntu/Debian:**
 ```bash
-# Update package list
-sudo apt update
-
-# Install Node.js 18+ via NodeSource
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
-
-# Verify installation
-node --version  # Should show v20.x.x
-npm --version   # Should show 10.x.x
 ```
 
-### Install Node.js on CentOS/RHEL
-
+**CentOS/RHEL:**
 ```bash
 curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
 sudo yum install -y nodejs
 ```
 
-### Install Node.js on macOS
-
+**macOS:**
 ```bash
 brew install node@20
 ```
 
-## Features (14 Analysis Modals)
+## 📊 Features (14 Analysis Modals)
 
 | Modal | Description |
 |-------|-------------|
@@ -71,49 +134,70 @@ brew install node@20
 | **Pre/Post Traffic** | Before/after comparison |
 | **Interface Dashboard** | Interface-level details |
 
-## Export Features
+## 🌐 Network Visualization Features
+
+- **OSPF Cost Labels** on network links (toggle with button)
+- **Asymmetric cost display** (forward↔reverse format)
+- **Color-coded links** (blue=normal, amber=asymmetric, red=down)
+- **Interactive D3.js graph** with zoom/pan
+- **Path highlighting** with animated dashed lines
+- **Country-based filtering** and high-level view
+
+## 📤 Export Features
 
 - **Export CSV** button on each modal
 - **Export All** button in header - exports comprehensive analysis
+- **Simulation export** for What-If scenarios
 
-## Tech Stack
+## 🏗️ Tech Stack
 
-- React 19 + TypeScript
-- D3.js v7 (visualization)
-- Vite (build tool)
-- Tailwind CSS (styling)
-- Lucide Icons
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 19 + TypeScript |
+| Visualization | D3.js v7 |
+| Build Tool | Vite 6 |
+| Styling | Tailwind CSS |
+| Icons | Lucide React |
+| Backend | Express 5 |
+| Database | SQLite (better-sqlite3) |
+| Auth | JWT + bcrypt |
+| Security | Helmet + Rate Limiting |
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 netviz-pro/
+├── netviz.sh               # Master control script
 ├── App.tsx                 # Main application
 ├── components/             # React components (14 modals)
-│   ├── NetworkGraph.tsx    # D3 visualization
-│   ├── FileUpload.tsx      # File handler
+│   ├── NetworkGraph.tsx    # D3 visualization with OSPF costs
+│   ├── LoginScreen.tsx     # Authentication UI
+│   ├── AdminPanel.tsx      # User management
 │   ├── *Modal.tsx          # Analysis modals
-│   └── InterfaceCapacityDashboard.tsx
-├── utils/                  # Utilities
-│   ├── parser.ts           # JSON parser
-│   ├── graphAlgorithms.ts  # Dijkstra, paths
-│   ├── exportUtils.ts      # CSV export functions
-│   └── impactAnalysis.ts   # Impact calculations
+│   └── LinkDetailsPanel.tsx
+├── server/                 # Backend
+│   ├── gateway.js          # Security gateway (port 9040)
+│   ├── index.js            # Auth API server (port 9041)
+│   └── database.js         # SQLite operations
 ├── context/                # React contexts
+│   ├── AuthContext.tsx     # Authentication state
 │   └── ThemeContext.tsx    # Dark/Light theme
+├── utils/                  # Utilities
+│   ├── graphAlgorithms.ts  # Dijkstra, pathfinding
+│   └── exportUtils.ts      # CSV export
 ├── types.ts                # TypeScript interfaces
-└── constants.ts            # Country colors, defaults
+└── .env.local              # Configuration (create from .env.local.example)
 ```
 
-## Input File Format
+## 📋 Input File Format
 
 Minimum required JSON structure:
 
 ```json
 {
   "nodes": [
-    {"id": "R1", "label": "Router1", "country": "USA"},
-    {"id": "R2", "label": "Router2", "country": "Germany"}
+    {"id": "R1", "hostname": "router1.example.com", "country": "USA", "loopback_ip": "10.0.0.1"},
+    {"id": "R2", "hostname": "router2.example.com", "country": "Germany", "loopback_ip": "10.0.0.2"}
   ],
   "links": [
     {
@@ -127,51 +211,62 @@ Minimum required JSON structure:
 }
 ```
 
-## Running in Production
+## 🚀 Running in Production
 
 ```bash
 # Build for production
+./netviz.sh build
+
+# Or manually:
 npm run build
 
-# Preview production build locally
+# Preview production build
 npm run preview
 
-# Or serve with any static server
+# Serve with any static server
 npx serve dist
 ```
 
-## Running on Remote Server
-
-To make the app accessible from other machines:
+## 🌍 Running on Remote Server
 
 ```bash
-# The app already binds to 0.0.0.0:9040
-npm run dev
+# Start servers (binds to 0.0.0.0)
+./netviz.sh start
 
 # Access from any machine on the network:
 # http://<server-ip>:9040
 ```
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Port already in use
 ```bash
-# Kill process on port 9040
+./netviz.sh stop
+# Or manually:
 lsof -ti:9040 | xargs kill -9
 ```
 
 ### npm install fails
 ```bash
-# Clear npm cache and retry
-npm cache clean --force
-rm -rf node_modules package-lock.json
-npm install
+./netviz.sh clean
+./netviz.sh deps --force
+```
+
+### Check server status
+```bash
+./netviz.sh status
+```
+
+### View logs
+```bash
+./netviz.sh logs
 ```
 
 ### App shows blank screen
 - Check browser console for errors
 - Ensure you've uploaded a valid JSON topology file
+- Verify `.env.local` exists and is configured
 
-## License
+## 📄 License
 
 MIT
