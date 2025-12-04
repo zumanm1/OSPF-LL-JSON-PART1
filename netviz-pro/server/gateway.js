@@ -29,8 +29,12 @@ const app = express();
 const GATEWAY_PORT = process.env.GATEWAY_PORT || 9040;
 const VITE_INTERNAL_PORT = process.env.VITE_INTERNAL_PORT || 9042;
 const AUTH_SERVER_PORT = process.env.AUTH_PORT || 9041;
-const LOCALHOST_ONLY = (process.env.LOCALHOST_ONLY || 'true').toLowerCase() === 'true';
-const LISTEN_HOST = LOCALHOST_ONLY ? '127.0.0.1' : '0.0.0.0';
+
+// Server Binding - Controls which interface the server listens on
+// Options: 127.0.0.1 (localhost only), 0.0.0.0 (all interfaces), or specific IP
+const SERVER_HOST = process.env.SERVER_HOST || '0.0.0.0';
+const LOCALHOST_ONLY = (process.env.LOCALHOST_ONLY || 'false').toLowerCase() === 'true';
+const LISTEN_HOST = LOCALHOST_ONLY ? '127.0.0.1' : SERVER_HOST;
 
 const rawJwtSecret = process.env.APP_SECRET_KEY;
 if (!rawJwtSecret) {
@@ -121,6 +125,11 @@ const getLoginPageHTML = (error = '') => `
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NetViz Pro - Login</title>
+  
+  <!-- Favicon - Network topology icon for easy tab identification -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%233b82f6'/%3E%3Cstop offset='100%25' style='stop-color:%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='url(%23bg)' stroke='%231e40af' stroke-width='2'/%3E%3Cg stroke='%2393c5fd' stroke-width='2.5'%3E%3Cline x1='32' y1='32' x2='32' y2='14'/%3E%3Cline x1='32' y1='32' x2='16' y2='46'/%3E%3Cline x1='32' y1='32' x2='48' y2='46'/%3E%3Cline x1='32' y1='14' x2='16' y2='46'/%3E%3Cline x1='32' y1='14' x2='48' y2='46'/%3E%3Cline x1='16' y1='46' x2='48' y2='46'/%3E%3C/g%3E%3Cg fill='%2360a5fa' stroke='%23fff' stroke-width='2'%3E%3Ccircle cx='32' cy='32' r='7'/%3E%3Ccircle cx='32' cy='14' r='5'/%3E%3Ccircle cx='16' cy='46' r='5'/%3E%3Ccircle cx='48' cy='46' r='5'/%3E%3C/g%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#3b82f6" />
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {

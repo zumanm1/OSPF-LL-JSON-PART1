@@ -51,14 +51,22 @@ dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
 const app = express();
 const PORT = parseInt(process.env.AUTH_PORT || '9041', 10);
-const HOST = process.env.AUTH_HOST || '0.0.0.0'; // Allow external access
-const LOCALHOST_ONLY = (process.env.LOCALHOST_ONLY || 'true').toLowerCase() === 'true';
-const LISTEN_HOST = LOCALHOST_ONLY ? '127.0.0.1' : HOST;
+// Server Binding - Controls which interface the server listens on
+// Options: 127.0.0.1 (localhost only), 0.0.0.0 (all interfaces), or specific IP
+const SERVER_HOST = process.env.SERVER_HOST || process.env.AUTH_HOST || '0.0.0.0';
+const LOCALHOST_ONLY = (process.env.LOCALHOST_ONLY || 'false').toLowerCase() === 'true';
+const LISTEN_HOST = LOCALHOST_ONLY ? '127.0.0.1' : SERVER_HOST;
 
-// IP Allowlist - comma-separated list of allowed IPs/subnets
-const ALLOWED_IPS = process.env.ALLOWED_IPS
+// IP Whitelist - Comma-separated list of allowed client IPs
+// Use 0.0.0.0 to allow all IPs (not recommended for production)
+// Examples: 127.0.0.1,192.168.1.0/24,10.0.0.5
+const rawAllowedIPs = process.env.ALLOWED_IPS
   ? process.env.ALLOWED_IPS.split(',').map(ip => ip.trim()).filter(Boolean)
-  : null; // null = allow all (based on LOCALHOST_ONLY)
+  : null;
+
+// Check if 0.0.0.0 is in the list (means allow all)
+const ALLOW_ALL_IPS = rawAllowedIPs && rawAllowedIPs.includes('0.0.0.0');
+const ALLOWED_IPS = ALLOW_ALL_IPS ? null : rawAllowedIPs; // null = allow all
 
 // Additional CORS origins - comma-separated
 const ALLOWED_CORS_ORIGINS = process.env.ALLOWED_CORS_ORIGINS
