@@ -169,6 +169,8 @@ brew install node@20
 netviz-pro/
 ├── netviz.sh               # Master control script
 ├── App.tsx                 # Main application
+├── public/
+│   └── favicon.svg         # Network topology favicon
 ├── components/             # React components (14 modals)
 │   ├── NetworkGraph.tsx    # D3 visualization with OSPF costs
 │   ├── LoginScreen.tsx     # Authentication UI
@@ -236,6 +238,32 @@ npx serve dist
 # Access from any machine on the network:
 # http://<server-ip>:9040
 ```
+
+## 🔒 Network & IP Configuration
+
+Configure in `.env.local`:
+
+```bash
+# Server Binding - Controls which interface the server listens on
+# Options: 127.0.0.1 (localhost only), 0.0.0.0 (all interfaces), or specific IP
+SERVER_HOST=0.0.0.0
+
+# IP Whitelist - Comma-separated list of allowed client IPs
+# Use 0.0.0.0 to allow all IPs (not recommended for production)
+# Examples: 127.0.0.1,192.168.1.0/24,10.0.0.5
+ALLOWED_IPS=0.0.0.0
+
+# Localhost Only Mode (overrides SERVER_HOST if true)
+LOCALHOST_ONLY=false
+```
+
+| Setting | Description |
+|---------|-------------|
+| `SERVER_HOST=0.0.0.0` | Listen on all network interfaces |
+| `SERVER_HOST=127.0.0.1` | Listen only on localhost |
+| `ALLOWED_IPS=0.0.0.0` | Allow connections from any IP |
+| `ALLOWED_IPS=192.168.1.0/24` | Allow only local subnet |
+| `LOCALHOST_ONLY=true` | Override to localhost only |
 
 ## 🔧 Troubleshooting
 
