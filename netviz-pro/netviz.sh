@@ -69,11 +69,11 @@ check_npm() {
 }
 
 # ============================================================================
-# Install Command - Install system requirements
+# Install Command - Install system requirements (skips if already met)
 # ============================================================================
 cmd_install() {
     print_header
-    echo -e "${CYAN}Installing system requirements...${NC}"
+    echo -e "${CYAN}Checking system requirements...${NC}"
     echo ""
 
     # Detect OS
@@ -89,10 +89,14 @@ cmd_install() {
     echo -e "  Detected OS: ${GREEN}$OS${NC}"
     echo ""
 
+    NEEDS_INSTALL=0
+
     # Check Node.js
     if check_node; then
-        echo -e "  ${GREEN}✓${NC} Node.js: $(node --version)"
+        NODE_VERSION=$(node --version)
+        echo -e "  ${GREEN}✓${NC} Node.js already installed: $NODE_VERSION (skipping)"
     else
+        NEEDS_INSTALL=1
         echo -e "  ${YELLOW}⚠${NC} Node.js not found. Installing..."
         case $OS in
             macos)
@@ -123,23 +127,28 @@ cmd_install() {
 
     # Check npm
     if check_npm; then
-        echo -e "  ${GREEN}✓${NC} npm: $(npm --version)"
+        NPM_VERSION=$(npm --version)
+        echo -e "  ${GREEN}✓${NC} npm already installed: $NPM_VERSION (skipping)"
     else
         echo -e "  ${RED}✗${NC} npm not found. Please reinstall Node.js."
         exit 1
     fi
 
     echo ""
-    echo -e "${GREEN}✓ System requirements installed!${NC}"
+    if [ $NEEDS_INSTALL -eq 0 ]; then
+        echo -e "${GREEN}✓ All system requirements already met! Nothing to install.${NC}"
+    else
+        echo -e "${GREEN}✓ System requirements installed!${NC}"
+    fi
     echo ""
 }
 
 # ============================================================================
-# Deps Command - Install project dependencies
+# Deps Command - Install project dependencies (skips if already installed)
 # ============================================================================
 cmd_deps() {
     print_header
-    echo -e "${CYAN}Installing project dependencies...${NC}"
+    echo -e "${CYAN}Checking project dependencies...${NC}"
     echo ""
 
     # Check prerequisites
@@ -148,36 +157,70 @@ cmd_deps() {
         exit 1
     fi
 
+    INSTALLED_COUNT=0
+    SKIPPED_COUNT=0
+
     # Force reinstall if --force flag
     if [[ "$1" == "--force" ]]; then
-        echo -e "  ${YELLOW}Force reinstall requested...${NC}"
+        echo -e "  ${YELLOW}Force reinstall requested - removing existing modules...${NC}"
         rm -rf node_modules package-lock.json server/node_modules 2>/dev/null || true
+        echo ""
     fi
 
-    # Install main dependencies
-    echo -e "  Installing frontend dependencies..."
-    npm install --legacy-peer-deps
-    if [ $? -ne 0 ]; then
-        echo -e "  ${RED}✗ Failed to install frontend dependencies${NC}"
-        exit 1
-    fi
-    echo -e "  ${GREEN}✓${NC} Frontend dependencies installed"
-
-    # Install server dependencies if server/package.json exists
-    if [ -f "server/package.json" ]; then
-        echo -e "  Installing backend dependencies..."
-        cd server && npm install --legacy-peer-deps && cd ..
+    # Check if frontend dependencies already installed
+    if [ -d "node_modules" ] && [ -f "package-lock.json" ]; then
+        # Verify key packages exist
+        if [ -d "node_modules/react" ] && [ -d "node_modules/express" ]; then
+            echo -e "  ${GREEN}✓${NC} Frontend dependencies already installed (skipping)"
+            SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+        else
+            echo -e "  ${YELLOW}⚠${NC} node_modules incomplete. Reinstalling..."
+            npm install --legacy-peer-deps
+            if [ $? -ne 0 ]; then
+                echo -e "  ${RED}✗ Failed to install frontend dependencies${NC}"
+                exit 1
+            fi
+            echo -e "  ${GREEN}✓${NC} Frontend dependencies installed"
+            INSTALLED_COUNT=$((INSTALLED_COUNT + 1))
+        fi
+    else
+        echo -e "  Installing frontend dependencies..."
+        npm install --legacy-peer-deps
         if [ $? -ne 0 ]; then
-            echo -e "  ${RED}✗ Failed to install backend dependencies${NC}"
+            echo -e "  ${RED}✗ Failed to install frontend dependencies${NC}"
             exit 1
         fi
-        echo -e "  ${GREEN}✓${NC} Backend dependencies installed"
+        echo -e "  ${GREEN}✓${NC} Frontend dependencies installed"
+        INSTALLED_COUNT=$((INSTALLED_COUNT + 1))
     fi
 
-    # Install security packages
-    echo -e "  Installing security packages..."
-    npm install helmet express-rate-limit --legacy-peer-deps 2>/dev/null || true
-    echo -e "  ${GREEN}✓${NC} Security packages installed"
+    # Check server dependencies if server/package.json exists
+    if [ -f "server/package.json" ]; then
+        if [ -d "server/node_modules" ]; then
+            echo -e "  ${GREEN}✓${NC} Backend dependencies already installed (skipping)"
+            SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+        else
+            echo -e "  Installing backend dependencies..."
+            cd server && npm install --legacy-peer-deps && cd ..
+            if [ $? -ne 0 ]; then
+                echo -e "  ${RED}✗ Failed to install backend dependencies${NC}"
+                exit 1
+            fi
+            echo -e "  ${GREEN}✓${NC} Backend dependencies installed"
+            INSTALLED_COUNT=$((INSTALLED_COUNT + 1))
+        fi
+    fi
+
+    # Check security packages (helmet, express-rate-limit)
+    if [ -d "node_modules/helmet" ] && [ -d "node_modules/express-rate-limit" ]; then
+        echo -e "  ${GREEN}✓${NC} Security packages already installed (skipping)"
+        SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+    else
+        echo -e "  Installing security packages..."
+        npm install helmet express-rate-limit --legacy-peer-deps 2>/dev/null || true
+        echo -e "  ${GREEN}✓${NC} Security packages installed"
+        INSTALLED_COUNT=$((INSTALLED_COUNT + 1))
+    fi
 
     # Setup environment file
     if [ ! -f ".env.local" ]; then
@@ -191,7 +234,11 @@ cmd_deps() {
     fi
 
     echo ""
-    echo -e "${GREEN}✓ All dependencies installed!${NC}"
+    if [ $INSTALLED_COUNT -eq 0 ]; then
+        echo -e "${GREEN}✓ All dependencies already installed! Nothing to do.${NC}"
+    else
+        echo -e "${GREEN}✓ Dependencies ready! (installed: $INSTALLED_COUNT, skipped: $SKIPPED_COUNT)${NC}"
+    fi
     echo ""
 }
 

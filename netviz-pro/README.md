@@ -18,8 +18,8 @@ cd OSPF-LL-JSON-PART1/netviz-pro
 ./netviz.sh install && ./netviz.sh deps && ./netviz.sh start
 
 # Or step by step:
-./netviz.sh install   # Install Node.js if not present
-./netviz.sh deps      # Install npm dependencies (frontend + backend)
+./netviz.sh install   # Check/install Node.js (skips if already installed)
+./netviz.sh deps      # Check/install npm dependencies (skips if already installed)
 ./netviz.sh start     # Start servers (Gateway: 9040, Auth: 9041, Vite: 9042)
 ```
 
@@ -47,8 +47,8 @@ npm run dev           # Vite only (port 9042)
 
 | Script | Description |
 |--------|-------------|
-| `./netviz.sh install` | Install system requirements (Node.js, npm) |
-| `./netviz.sh deps` | Install project dependencies (frontend + backend) |
+| `./netviz.sh install` | Check/install system requirements (skips if already met) |
+| `./netviz.sh deps` | Check/install project dependencies (skips if already installed) |
 | `./netviz.sh start` | Start Gateway (9040), Auth (9041), and Vite (9042) servers |
 | `./netviz.sh stop` | Stop all running servers |
 | `./netviz.sh restart` | Restart all servers |
