@@ -2,19 +2,53 @@
 
 ################################################################################
 # NetViz Pro - Start Development Server
+# Supports isolated Node.js environments via nvm, volta, or fnm
 ################################################################################
+
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # Color codes
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m'
+
+# Required Node version (from .nvmrc)
+REQUIRED_NODE_VERSION="20"
+
+# ============================================================================
+# Load nvm if available and switch to project Node version
+# ============================================================================
+load_nvm() {
+    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+    if [ -s "$NVM_DIR/nvm.sh" ]; then
+        source "$NVM_DIR/nvm.sh"
+        
+        if [ -f ".nvmrc" ]; then
+            local REQUIRED=$(cat .nvmrc)
+            local CURRENT=$(node --version 2>/dev/null | sed 's/v//' | cut -d. -f1)
+            
+            if [ "$CURRENT" != "$REQUIRED" ]; then
+                echo -e "  ${YELLOW}⚠${NC} Switching to Node $REQUIRED (project requirement)..."
+                nvm use "$REQUIRED" 2>/dev/null || nvm install "$REQUIRED"
+            fi
+        fi
+        return 0
+    fi
+    return 1
+}
 
 echo "════════════════════════════════════════════════════════════════"
 echo "  NetViz Pro - Starting Development Server"
 echo "════════════════════════════════════════════════════════════════"
 echo ""
+
+# Load nvm and switch to project version if available
+load_nvm
 
 # Check if .env.local exists
 if [ ! -f ".env.local" ]; then

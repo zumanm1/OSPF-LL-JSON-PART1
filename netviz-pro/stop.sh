@@ -4,6 +4,10 @@
 # NetViz Pro - Stop All Servers
 ################################################################################
 
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
 # Color codes
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
