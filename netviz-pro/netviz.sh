@@ -635,9 +635,9 @@ cmd_build() {
 # Setup Command - Install nvm and configure isolated Node.js environment
 # ============================================================================
 cmd_setup() {
-    # Delegate to setup-node.sh script
-    if [ -f "$SCRIPT_DIR/setup-node.sh" ]; then
-        "$SCRIPT_DIR/setup-node.sh"
+    # Delegate to setup-nvm.sh script
+    if [ -f "$SCRIPT_DIR/setup-nvm.sh" ]; then
+        "$SCRIPT_DIR/setup-nvm.sh"
     else
         print_header
         echo -e "${CYAN}Setting up Node.js environment...${NC}"

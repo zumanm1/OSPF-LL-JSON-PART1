@@ -59,7 +59,7 @@ npm run dev           # Vite only (port 9042)
 | `./netviz.sh setup` | **First-time setup**: Install nvm + Node.js v20 (isolated environment) |
 | `./netviz.sh install` | Check/install system requirements (Node.js, npm) |
 | `./netviz.sh deps` | Check/install project dependencies (skips if already installed) |
-| `./setup-node.sh` | Standalone Node.js environment setup script |
+| `./setup-nvm.sh` | Standalone nvm + Node.js environment setup script |
 
 ### Server Commands
 
@@ -81,7 +81,7 @@ npm run dev           # Vite only (port 9042)
 ### Individual Scripts
 
 ```bash
-./setup-node.sh       # Setup nvm + Node.js (interactive)
+./setup-nvm.sh        # Setup nvm + Node.js (interactive)
 ./install.sh          # Install dependencies only
 ./start.sh            # Start all servers (foreground)
 ./stop.sh             # Stop all servers
@@ -129,7 +129,7 @@ This project uses **isolated Node.js/npm versions** to avoid conflicts with othe
 ./netviz.sh setup
 
 # Or use the standalone script
-./setup-node.sh
+./setup-nvm.sh
 ```
 
 This will:
