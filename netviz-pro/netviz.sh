@@ -309,13 +309,48 @@ cmd_deps() {
         INSTALLED_COUNT=$((INSTALLED_COUNT + 1))
     fi
 
-    # Setup environment file
+    # Setup environment file with secure credentials
     if [ ! -f ".env.local" ]; then
-        if [ -f ".env.local.example" ]; then
-            echo -e "  Creating .env.local from template..."
-            cp .env.local.example .env.local
-            echo -e "  ${YELLOW}⚠ IMPORTANT: Edit .env.local with your secure credentials!${NC}"
-        fi
+        echo -e "  Creating .env.local with secure credentials..."
+        
+        # Generate secure random values
+        SECRET_KEY=$(openssl rand -base64 32 2>/dev/null || cat /dev/urandom | head -c 32 | base64)
+        RESET_PIN=$(openssl rand -hex 8 2>/dev/null || cat /dev/urandom | head -c 8 | xxd -p)
+        
+        # Create .env.local with secure defaults
+        cat > .env.local << EOF
+# NetViz Pro Environment Configuration
+# Auto-generated with secure credentials
+
+# ==============================================================================
+# SECURITY - AUTO-GENERATED
+# ==============================================================================
+APP_SECRET_KEY=${SECRET_KEY}
+ADMIN_RESET_PIN=${RESET_PIN}
+
+# ==============================================================================
+# ADMIN ACCOUNT
+# ==============================================================================
+APP_ADMIN_USERNAME=netviz_admin
+APP_ADMIN_PASSWORD=V3ry\$trongAdm1n!2025
+
+# ==============================================================================
+# SERVER CONFIGURATION
+# ==============================================================================
+AUTH_PORT=9041
+GATEWAY_PORT=9040
+VITE_INTERNAL_PORT=9042
+APP_SESSION_TIMEOUT=3600
+SERVER_HOST=0.0.0.0
+LOCALHOST_ONLY=false
+
+# ==============================================================================
+# IP ACCESS CONTROL
+# ==============================================================================
+ALLOWED_IPS=0.0.0.0
+EOF
+        echo -e "  ${GREEN}✓${NC} .env.local created with secure credentials"
+        echo -e "  ${CYAN}  ${NC} Admin: netviz_admin / V3ry\$trongAdm1n!2025"
     else
         echo -e "  ${GREEN}✓${NC} .env.local exists"
     fi
