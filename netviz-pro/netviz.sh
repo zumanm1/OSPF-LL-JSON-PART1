@@ -632,32 +632,83 @@ cmd_build() {
 }
 
 # ============================================================================
+# Setup Command - Install nvm and configure isolated Node.js environment
+# ============================================================================
+cmd_setup() {
+    # Delegate to setup-node.sh script
+    if [ -f "$SCRIPT_DIR/setup-node.sh" ]; then
+        "$SCRIPT_DIR/setup-node.sh"
+    else
+        print_header
+        echo -e "${CYAN}Setting up Node.js environment...${NC}"
+        echo ""
+        
+        # Inline setup if script doesn't exist
+        export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+        
+        if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+            echo -e "  ${YELLOW}Installing nvm...${NC}"
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+            
+            # Load nvm
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+        else
+            source "$NVM_DIR/nvm.sh"
+            echo -e "  ${GREEN}✓${NC} nvm already installed"
+        fi
+        
+        if command -v nvm &> /dev/null; then
+            echo -e "  ${CYAN}Installing Node v$REQUIRED_NODE_VERSION...${NC}"
+            nvm install $REQUIRED_NODE_VERSION
+            nvm use $REQUIRED_NODE_VERSION
+            echo -e "  ${GREEN}✓${NC} Now using Node $(node --version)"
+        fi
+        
+        echo ""
+        echo -e "${GREEN}✓ Setup complete! Restart your terminal, then run:${NC}"
+        echo "  ./netviz.sh deps && ./netviz.sh start"
+        echo ""
+    fi
+}
+
+# ============================================================================
 # Help Command
 # ============================================================================
 cmd_help() {
     print_header
     echo "Usage: ./netviz.sh <command> [options]"
     echo ""
-    echo "Commands:"
-    echo "  install     Install system requirements (Node.js, npm)"
+    echo -e "${CYAN}Setup Commands:${NC}"
+    echo "  setup       Install nvm and configure isolated Node.js environment"
+    echo "  install     Check/install system requirements (Node.js, npm)"
     echo "  deps        Install project dependencies (frontend + backend)"
+    echo ""
+    echo -e "${CYAN}Server Commands:${NC}"
     echo "  start       Start all servers (Gateway: 9040, Auth: 9041, Vite: 9042)"
     echo "  stop        Stop all running servers"
     echo "  restart     Restart all servers"
     echo "  status      Show system and server status"
     echo "  logs        View server logs (tail -f)"
+    echo ""
+    echo -e "${CYAN}Build Commands:${NC}"
     echo "  clean       Clean build artifacts and node_modules"
     echo "  build       Build for production"
     echo "  help        Show this help message"
     echo ""
-    echo "Options:"
+    echo -e "${CYAN}Options:${NC}"
     echo "  start -p <port>    Start on custom gateway port"
     echo "  deps --force       Force reinstall dependencies"
     echo ""
-    echo "Quick Start:"
-    echo "  ./netviz.sh install && ./netviz.sh deps && ./netviz.sh start"
+    echo -e "${CYAN}Quick Start (First Time):${NC}"
+    echo "  ./netviz.sh setup   # Install nvm + Node.js (one-time)"
+    echo "  ./netviz.sh deps    # Install dependencies"
+    echo "  ./netviz.sh start   # Start servers"
     echo ""
-    echo "Environment Variables:"
+    echo -e "${CYAN}Quick Start (Returning):${NC}"
+    echo "  ./netviz.sh start   # Auto-switches Node version if nvm installed"
+    echo ""
+    echo -e "${CYAN}Environment Variables:${NC}"
     echo "  NETVIZ_PORT=8080 ./netviz.sh start    Start on custom port"
     echo ""
 }
@@ -666,6 +717,9 @@ cmd_help() {
 # Main
 # ============================================================================
 case "${1:-help}" in
+    setup)
+        cmd_setup
+        ;;
     install)
         cmd_install
         ;;

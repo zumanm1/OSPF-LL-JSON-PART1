@@ -11,19 +11,26 @@ git clone https://github.com/zumanm1/OSPF-LL-JSON-PART1.git
 cd OSPF-LL-JSON-PART1/netviz-pro
 ```
 
-### 2. Using Bash Scripts (Recommended)
+### 2. First-Time Setup (Recommended)
 
 ```bash
-# One-liner to install and start
-./netviz.sh install && ./netviz.sh deps && ./netviz.sh start
+# Option A: Full isolated setup with nvm (recommended)
+./netviz.sh setup     # Installs nvm + Node.js v20 (one-time)
+./netviz.sh deps      # Install npm dependencies
+./netviz.sh start     # Start servers
 
-# Or step by step:
-./netviz.sh install   # Check/install Node.js (skips if already installed)
-./netviz.sh deps      # Check/install npm dependencies (skips if already installed)
-./netviz.sh start     # Start servers (Gateway: 9040, Auth: 9041, Vite: 9042)
+# Option B: Quick start (if Node.js already installed)
+./netviz.sh install && ./netviz.sh deps && ./netviz.sh start
 ```
 
-### 3. Manual Installation
+### 3. Returning Users
+
+```bash
+# Just start - auto-switches to correct Node version if nvm installed
+./netviz.sh start
+```
+
+### 4. Manual Installation
 
 ```bash
 # Install frontend dependencies
@@ -45,21 +52,36 @@ npm run dev           # Vite only (port 9042)
 
 ## 📜 Available Scripts
 
+### Setup Commands
+
 | Script | Description |
 |--------|-------------|
-| `./netviz.sh install` | Check/install system requirements (skips if already met) |
+| `./netviz.sh setup` | **First-time setup**: Install nvm + Node.js v20 (isolated environment) |
+| `./netviz.sh install` | Check/install system requirements (Node.js, npm) |
 | `./netviz.sh deps` | Check/install project dependencies (skips if already installed) |
+| `./setup-node.sh` | Standalone Node.js environment setup script |
+
+### Server Commands
+
+| Script | Description |
+|--------|-------------|
 | `./netviz.sh start` | Start Gateway (9040), Auth (9041), and Vite (9042) servers |
 | `./netviz.sh stop` | Stop all running servers |
 | `./netviz.sh restart` | Restart all servers |
 | `./netviz.sh status` | Show system and server status |
 | `./netviz.sh logs` | View server logs (tail -f) |
+
+### Build Commands
+
+| Script | Description |
+|--------|-------------|
 | `./netviz.sh clean` | Clean build artifacts and node_modules |
 | `./netviz.sh build` | Build for production |
 
 ### Individual Scripts
 
 ```bash
+./setup-node.sh       # Setup nvm + Node.js (interactive)
 ./install.sh          # Install dependencies only
 ./start.sh            # Start all servers (foreground)
 ./stop.sh             # Stop all servers
@@ -100,6 +122,22 @@ NetViz Pro includes enterprise-grade authentication:
 
 This project uses **isolated Node.js/npm versions** to avoid conflicts with other projects on your machine.
 
+### Quick Setup (Recommended)
+
+```bash
+# One command to install nvm + Node.js v20
+./netviz.sh setup
+
+# Or use the standalone script
+./setup-node.sh
+```
+
+This will:
+1. Install nvm (Node Version Manager) if not present
+2. Install Node.js v20 LTS
+3. Configure your shell for auto-switching
+4. Display next steps
+
 ### Version Pinning Files
 
 | File | Purpose | Tool Support |
@@ -112,7 +150,10 @@ This project uses **isolated Node.js/npm versions** to avoid conflicts with othe
 ### Using nvm (Recommended)
 
 ```bash
-# Install nvm (if not already installed)
+# Option 1: Use our setup script (easiest)
+./netviz.sh setup
+
+# Option 2: Manual nvm installation
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
 # Restart terminal, then:
@@ -136,16 +177,44 @@ volta pin node@20
 volta pin npm@10
 ```
 
-### Automatic Version Switching
-
-The `./netviz.sh` script automatically:
-1. Detects if nvm is installed
-2. Switches to the project's required Node version
-3. Warns if using an incompatible version
+### Using fnm (Fast Alternative)
 
 ```bash
+# Install fnm
+curl -fsSL https://fnm.vercel.app/install | bash
+
+# Use project version
+cd netviz-pro
+fnm use          # Reads .node-version
+```
+
+### Automatic Version Switching
+
+All `./netviz.sh` commands automatically:
+1. Detect if nvm is installed
+2. Switch to the project's required Node version (v20)
+3. Warn if using an incompatible version
+
+```bash
+./netviz.sh setup     # Install nvm + Node.js (first-time)
 ./netviz.sh install   # Shows isolation status and switches Node version
 ./netviz.sh start     # Auto-loads correct Node version before starting
+./netviz.sh deps      # Auto-loads correct Node version before installing
+```
+
+### Shell Auto-Switching (Optional)
+
+Add this to your `~/.zshrc` or `~/.bashrc` for automatic version switching when entering the project directory:
+
+```bash
+# Auto-switch Node version when entering directory with .nvmrc
+autoload -U add-zsh-hook 2>/dev/null
+load-nvmrc() {
+  if [ -f .nvmrc ]; then
+    nvm use 2>/dev/null
+  fi
+}
+add-zsh-hook chpwd load-nvmrc 2>/dev/null
 ```
 
 ### Install Node.js
