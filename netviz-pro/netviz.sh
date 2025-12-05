@@ -20,6 +20,9 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Required Node version (from .nvmrc)
+REQUIRED_NODE_VERSION="20"
+
 # Default ports
 GATEWAY_PORT=${NETVIZ_PORT:-9040}
 AUTH_PORT=9041
@@ -68,6 +71,46 @@ check_npm() {
     return 0
 }
 
+# Load nvm if available and switch to project Node version
+load_nvm() {
+    # Try to load nvm
+    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+    if [ -s "$NVM_DIR/nvm.sh" ]; then
+        source "$NVM_DIR/nvm.sh"
+        
+        # Check if .nvmrc exists and use it
+        if [ -f ".nvmrc" ]; then
+            local REQUIRED=$(cat .nvmrc)
+            local CURRENT=$(node --version 2>/dev/null | sed 's/v//' | cut -d. -f1)
+            
+            if [ "$CURRENT" != "$REQUIRED" ]; then
+                echo -e "  ${YELLOW}⚠${NC} Switching to Node $REQUIRED (project requirement)..."
+                nvm use "$REQUIRED" 2>/dev/null || nvm install "$REQUIRED"
+            fi
+        fi
+        return 0
+    fi
+    return 1
+}
+
+# Check Node version compatibility
+check_node_version() {
+    local CURRENT_VERSION=$(node --version 2>/dev/null | sed 's/v//' | cut -d. -f1)
+    local MIN_VERSION=18
+    local MAX_VERSION=24
+    
+    if [ -z "$CURRENT_VERSION" ]; then
+        return 1
+    fi
+    
+    if [ "$CURRENT_VERSION" -lt "$MIN_VERSION" ] || [ "$CURRENT_VERSION" -gt "$MAX_VERSION" ]; then
+        echo -e "  ${YELLOW}⚠${NC} Node v$CURRENT_VERSION detected. Recommended: v18-v24"
+        echo -e "  ${YELLOW}  ${NC} For best results, use Node v$REQUIRED_NODE_VERSION (see .nvmrc)"
+        return 1
+    fi
+    return 0
+}
+
 # ============================================================================
 # Install Command - Install system requirements (skips if already met)
 # ============================================================================
@@ -90,53 +133,94 @@ cmd_install() {
     echo ""
 
     NEEDS_INSTALL=0
+    NVM_AVAILABLE=0
+
+    # Check for nvm first (preferred for isolation)
+    echo -e "${CYAN}Checking version managers...${NC}"
+    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+    if [ -s "$NVM_DIR/nvm.sh" ]; then
+        source "$NVM_DIR/nvm.sh"
+        NVM_AVAILABLE=1
+        echo -e "  ${GREEN}✓${NC} nvm installed (Node version manager)"
+    else
+        echo -e "  ${YELLOW}○${NC} nvm not installed (optional but recommended for isolation)"
+        echo -e "    ${CYAN}Install with:${NC} curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash"
+    fi
+    echo ""
 
     # Check Node.js
+    echo -e "${CYAN}Checking Node.js...${NC}"
     if check_node; then
         NODE_VERSION=$(node --version)
-        echo -e "  ${GREEN}✓${NC} Node.js already installed: $NODE_VERSION (skipping)"
+        NODE_MAJOR=$(echo $NODE_VERSION | sed 's/v//' | cut -d. -f1)
+        
+        # If nvm available and wrong version, switch
+        if [ $NVM_AVAILABLE -eq 1 ] && [ "$NODE_MAJOR" != "$REQUIRED_NODE_VERSION" ]; then
+            echo -e "  ${YELLOW}⚠${NC} Node $NODE_VERSION detected, project requires v$REQUIRED_NODE_VERSION"
+            echo -e "  ${CYAN}  ${NC} Installing/switching to Node $REQUIRED_NODE_VERSION via nvm..."
+            nvm install $REQUIRED_NODE_VERSION 2>/dev/null
+            nvm use $REQUIRED_NODE_VERSION 2>/dev/null
+            echo -e "  ${GREEN}✓${NC} Now using Node $(node --version)"
+        else
+            echo -e "  ${GREEN}✓${NC} Node.js installed: $NODE_VERSION"
+            check_node_version
+        fi
     else
         NEEDS_INSTALL=1
         echo -e "  ${YELLOW}⚠${NC} Node.js not found. Installing..."
-        case $OS in
-            macos)
-                if command -v brew &> /dev/null; then
-                    brew install node@20
-                else
-                    echo -e "  ${RED}✗${NC} Homebrew not found. Please install Node.js manually."
+        
+        # Prefer nvm if available
+        if [ $NVM_AVAILABLE -eq 1 ]; then
+            echo -e "  ${CYAN}  ${NC} Installing Node $REQUIRED_NODE_VERSION via nvm..."
+            nvm install $REQUIRED_NODE_VERSION
+            nvm use $REQUIRED_NODE_VERSION
+        else
+            case $OS in
+                macos)
+                    if command -v brew &> /dev/null; then
+                        brew install node@20
+                    else
+                        echo -e "  ${RED}✗${NC} Homebrew not found. Please install Node.js manually."
+                        echo "     Visit: https://nodejs.org/"
+                        exit 1
+                    fi
+                    ;;
+                debian)
+                    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+                    sudo apt-get install -y nodejs
+                    ;;
+                redhat)
+                    curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+                    sudo yum install -y nodejs
+                    ;;
+                *)
+                    echo -e "  ${RED}✗${NC} Unknown OS. Please install Node.js manually."
                     echo "     Visit: https://nodejs.org/"
                     exit 1
-                fi
-                ;;
-            debian)
-                curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-                sudo apt-get install -y nodejs
-                ;;
-            redhat)
-                curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
-                sudo yum install -y nodejs
-                ;;
-            *)
-                echo -e "  ${RED}✗${NC} Unknown OS. Please install Node.js manually."
-                echo "     Visit: https://nodejs.org/"
-                exit 1
-                ;;
-        esac
+                    ;;
+            esac
+        fi
         echo -e "  ${GREEN}✓${NC} Node.js installed: $(node --version)"
     fi
 
     # Check npm
     if check_npm; then
         NPM_VERSION=$(npm --version)
-        echo -e "  ${GREEN}✓${NC} npm already installed: $NPM_VERSION (skipping)"
+        echo -e "  ${GREEN}✓${NC} npm installed: $NPM_VERSION"
     else
         echo -e "  ${RED}✗${NC} npm not found. Please reinstall Node.js."
         exit 1
     fi
 
     echo ""
+    echo -e "${CYAN}Project Isolation:${NC}"
+    echo -e "  ${GREEN}✓${NC} .nvmrc: Node v$REQUIRED_NODE_VERSION pinned for this project"
+    echo -e "  ${GREEN}✓${NC} .node-version: Compatible with fnm/volta"
+    echo -e "  ${GREEN}✓${NC} package.json engines: Node >=18 <25, npm >=9"
+    echo ""
+    
     if [ $NEEDS_INSTALL -eq 0 ]; then
-        echo -e "${GREEN}✓ All system requirements already met! Nothing to install.${NC}"
+        echo -e "${GREEN}✓ All system requirements already met!${NC}"
     else
         echo -e "${GREEN}✓ System requirements installed!${NC}"
     fi
@@ -150,6 +234,9 @@ cmd_deps() {
     print_header
     echo -e "${CYAN}Checking project dependencies...${NC}"
     echo ""
+
+    # Load nvm and switch to project version if available
+    load_nvm
 
     # Check prerequisites
     if ! check_node || ! check_npm; then
@@ -249,6 +336,9 @@ cmd_start() {
     print_header
     echo -e "${CYAN}Starting NetViz Pro servers...${NC}"
     echo ""
+
+    # Load nvm and switch to project version if available
+    load_nvm
 
     # Parse port option
     while [[ $# -gt 0 ]]; do

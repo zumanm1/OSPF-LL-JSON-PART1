@@ -33,7 +33,7 @@ npm install --legacy-peer-deps
 cp .env.local.example .env.local
 # Edit .env.local with your secure credentials
 
-# Start development servers
+# Start development server
 npm run dev           # Vite only (port 9042)
 # OR for full stack with auth:
 ./start.sh            # All servers with authentication
@@ -92,9 +92,61 @@ NetViz Pro includes enterprise-grade authentication:
 
 ## 🛠️ System Requirements
 
-- **Node.js** v18.0.0+ (required)
+- **Node.js** v18.0.0 - v24.x (v20 LTS recommended)
 - **npm** v9.0.0+ (comes with Node.js)
 - Modern browser (Chrome, Firefox, Safari, Edge)
+
+## 🔒 Isolated Node.js Environment
+
+This project uses **isolated Node.js/npm versions** to avoid conflicts with other projects on your machine.
+
+### Version Pinning Files
+
+| File | Purpose | Tool Support |
+|------|---------|--------------|
+| `.nvmrc` | Pins Node v20 | nvm, fnm |
+| `.node-version` | Pins Node v20 | fnm, volta, nodenv |
+| `package.json` engines | Enforces Node 18-24, npm 9+ | npm |
+| `package.json` packageManager | Pins npm@10.8.2 | corepack |
+
+### Using nvm (Recommended)
+
+```bash
+# Install nvm (if not already installed)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Restart terminal, then:
+cd netviz-pro
+nvm use          # Automatically uses Node v20 from .nvmrc
+
+# Or manually:
+nvm install 20
+nvm use 20
+```
+
+### Using Volta (Alternative)
+
+```bash
+# Install Volta
+curl https://get.volta.sh | bash
+
+# Pin versions for this project
+cd netviz-pro
+volta pin node@20
+volta pin npm@10
+```
+
+### Automatic Version Switching
+
+The `./netviz.sh` script automatically:
+1. Detects if nvm is installed
+2. Switches to the project's required Node version
+3. Warns if using an incompatible version
+
+```bash
+./netviz.sh install   # Shows isolation status and switches Node version
+./netviz.sh start     # Auto-loads correct Node version before starting
+```
 
 ### Install Node.js
 
