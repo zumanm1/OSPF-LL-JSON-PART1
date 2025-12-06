@@ -11,6 +11,7 @@ import { useTheme } from '../context/ThemeContext';
 interface DeviceManagerProps {
   isOpen: boolean;
   onClose: () => void;
+  onDevicesImported: (devices: any[]) => void;
 }
 
 // Sample device data for CSV template
@@ -29,7 +30,7 @@ const SAMPLE_DEVICES = [
 
 const CSV_HEADERS = ['Name', 'Tags', 'IP Address', 'Connection', 'Type', 'Platform', 'Software', 'Country'];
 
-const DeviceManager: React.FC<DeviceManagerProps> = ({ isOpen, onClose }) => {
+const DeviceManager: React.FC<DeviceManagerProps> = ({ isOpen, onClose, onDevicesImported }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
@@ -89,7 +90,26 @@ const DeviceManager: React.FC<DeviceManagerProps> = ({ isOpen, onClose }) => {
         }
 
         const deviceCount = lines.length - 1;
+
+        // Parse devices
+        const devices = lines.slice(1).map(line => {
+          const cols = line.split(',').map(c => c.trim());
+          return {
+            name: cols[0],
+            tags: cols[1],
+            ip_address: cols[2],
+            connection: cols[3],
+            type: cols[4],
+            platform: cols[5],
+            software: cols[6],
+            country: cols[7]
+          };
+        });
+
         setImportStatus({ type: 'success', message: `Successfully validated ${deviceCount} device(s) from CSV!` });
+
+        // Pass imported devices to parent
+        onDevicesImported(devices);
 
         // Clear status after 5 seconds
         setTimeout(() => setImportStatus({ type: null, message: '' }), 5000);
@@ -155,11 +175,10 @@ const DeviceManager: React.FC<DeviceManagerProps> = ({ isOpen, onClose }) => {
 
           {/* Status Message */}
           {importStatus.type && (
-            <div className={`flex items-center gap-2 p-3 mb-4 rounded-lg ${
-              importStatus.type === 'success'
+            <div className={`flex items-center gap-2 p-3 mb-4 rounded-lg ${importStatus.type === 'success'
                 ? (isDark ? 'bg-emerald-900/30 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border border-emerald-200')
                 : (isDark ? 'bg-red-900/30 text-red-300 border border-red-500/30' : 'bg-red-100 text-red-700 border border-red-200')
-            }`}>
+              }`}>
               {importStatus.type === 'success'
                 ? <CheckCircle className="w-4 h-4" />
                 : <AlertCircle className="w-4 h-4" />
@@ -249,12 +268,11 @@ const DeviceManager: React.FC<DeviceManagerProps> = ({ isOpen, onClose }) => {
                         {device.software}
                       </td>
                       <td className={`px-3 py-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        <span className={`px-2 py-0.5 text-xs rounded font-medium ${
-                          device.country === 'DEU' ? (isDark ? 'bg-yellow-900/50 text-yellow-300' : 'bg-yellow-100 text-yellow-700') :
-                          device.country === 'GBR' ? (isDark ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700') :
-                          device.country === 'USA' ? (isDark ? 'bg-red-900/50 text-red-300' : 'bg-red-100 text-red-700') :
-                          (isDark ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700')
-                        }`}>
+                        <span className={`px-2 py-0.5 text-xs rounded font-medium ${device.country === 'DEU' ? (isDark ? 'bg-yellow-900/50 text-yellow-300' : 'bg-yellow-100 text-yellow-700') :
+                            device.country === 'GBR' ? (isDark ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700') :
+                              device.country === 'USA' ? (isDark ? 'bg-red-900/50 text-red-300' : 'bg-red-100 text-red-700') :
+                                (isDark ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700')
+                          }`}>
                           {device.country}
                         </span>
                       </td>

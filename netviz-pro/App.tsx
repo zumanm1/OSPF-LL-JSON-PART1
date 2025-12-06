@@ -511,6 +511,48 @@ const App: React.FC = () => {
     setIsSimulationMode(true);
   };
 
+  const handleDevicesImported = (importedDevices: any[]) => {
+    setOriginalData(prevData => {
+      const newNodes = [...prevData.nodes];
+      let addedCount = 0;
+
+      importedDevices.forEach(device => {
+        // Check for duplicates (by id/name)
+        if (!newNodes.some(n => n.id === device.name)) {
+          newNodes.push({
+            id: device.name,
+            name: device.name,
+            hostname: device.name,
+            loopback_ip: device.ip_address,
+            country: device.country,
+            node_type: device.type,
+            is_active: true,
+            role: 'unknown',
+            x: 0,
+            y: 0
+          });
+          addedCount++;
+        }
+      });
+
+      if (addedCount > 0) {
+        // Update active countries if new countries are introduced
+        const newCountries = Array.from(new Set(newNodes.map(n => n.country))).sort();
+        setActiveCountries(newCountries);
+
+        alert(`Successfully imported ${addedCount} new devices.`);
+        return {
+          ...prevData,
+          nodes: newNodes
+        };
+      } else {
+        alert('No new devices imported (all duplicates).');
+        return prevData;
+      }
+    });
+    setShowDeviceManager(false);
+  };
+
   return (
     <div className="flex h-screen w-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 overflow-hidden flex-col transition-colors duration-300">
       {/* Header */}
@@ -1075,6 +1117,7 @@ const App: React.FC = () => {
             <DeviceManager
               isOpen={showDeviceManager}
               onClose={() => setShowDeviceManager(false)}
+              onDevicesImported={handleDevicesImported}
             />
           )}
 
