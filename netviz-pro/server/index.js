@@ -46,6 +46,15 @@ import {
   pinProtectedRateLimit
 } from './securityMiddleware.js';
 
+import {
+  initAuthVault,
+  getAuthMode,
+  isAuthVaultActive,
+  verifyToken,
+  getAuthConfig,
+  getJwtSecret
+} from './lib/auth-unified.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
@@ -204,8 +213,8 @@ app.use(cors({
   credentials: true
 }));
 
-// Authentication middleware
-const requireAuth = (req, res, next) => {
+// Authentication middleware (supports both legacy JWT and Keycloak)
+const requireAuth = async (req, res, next) => {
   const headerToken = req.headers.authorization?.replace('Bearer ', '');
   const cookieToken = req.cookies?.netviz_session;
   const token = headerToken || cookieToken;
@@ -214,10 +223,19 @@ const requireAuth = (req, res, next) => {
     return res.status(401).json({ error: 'Authentication required' });
   }
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const session = validateSession(token);
+  // Try unified token verification (Keycloak first, then legacy)
+  const verifiedUser = await verifyToken(token, JWT_SECRET);
 
+  if (verifiedUser) {
+    // Keycloak tokens don't need session validation
+    if (verifiedUser.authSource === 'keycloak') {
+      req.user = verifiedUser;
+      req.token = token;
+      return next();
+    }
+
+    // Legacy tokens need session validation
+    const session = validateSession(token);
     if (!session) {
       if (cookieToken) {
         res.clearCookie('netviz_session', COOKIE_OPTIONS);
@@ -225,7 +243,8 @@ const requireAuth = (req, res, next) => {
       return res.status(401).json({ error: 'Session expired or invalid' });
     }
 
-    const expiryStatus = checkExpiry(decoded.userId);
+    // Check expiry for legacy users
+    const expiryStatus = checkExpiry(verifiedUser.userId);
     if (expiryStatus.isExpired) {
       if (cookieToken) {
         res.clearCookie('netviz_session', COOKIE_OPTIONS);
@@ -236,16 +255,16 @@ const requireAuth = (req, res, next) => {
       });
     }
 
-    req.user = decoded;
+    req.user = verifiedUser;
     req.session = session;
     req.token = token;
-    next();
-  } catch (error) {
-    if (cookieToken) {
-      res.clearCookie('netviz_session', COOKIE_OPTIONS);
-    }
-    return res.status(401).json({ error: 'Invalid token' });
+    return next();
   }
+
+  if (cookieToken) {
+    res.clearCookie('netviz_session', COOKIE_OPTIONS);
+  }
+  return res.status(401).json({ error: 'Invalid token' });
 };
 
 // Admin-only middleware
@@ -646,44 +665,66 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     service: 'NetViz Pro Auth Server',
     network_accessible: true,
+    authVault: isAuthVaultActive() ? 'active' : 'inactive',
+    authMode: getAuthMode(),
     timestamp: new Date().toISOString()
   });
+});
+
+// AUTH CONFIG ENDPOINT (for frontend to detect auth mode)
+// ============================================================================
+app.get('/api/auth/config', (req, res) => {
+  res.json(getAuthConfig());
 });
 
 // ============================================================================
 // START SERVER (NETWORK ACCESSIBLE)
 // ============================================================================
-app.listen(PORT, LISTEN_HOST, () => {
-  console.log('');
-  console.log('============================================================');
-  console.log('  NetViz Pro Authentication Server');
-  console.log('============================================================');
-  console.log(`  Status: Running`);
-  console.log(`  Port: ${PORT}`);
-  console.log(`  Host: ${LISTEN_HOST}`);
-  console.log(`  Access: ${LOCALHOST_ONLY ? 'Localhost only' : 'Network accessible'}`);
-  console.log(`  Session Timeout: ${SESSION_TIMEOUT}s`);
-  console.log('');
-  console.log('  Access Control:');
-  if (ALLOWED_IPS && ALLOWED_IPS.length > 0) {
-    console.log(`  - IP Allowlist: ${ALLOWED_IPS.join(', ')}`);
-  } else {
-    console.log(`  - IP Allowlist: All IPs allowed (no restriction)`);
-  }
-  if (ALLOWED_CORS_ORIGINS.length > 0) {
-    console.log(`  - Extra CORS Origins: ${ALLOWED_CORS_ORIGINS.join(', ')}`);
-  }
-  console.log('');
-  console.log('  Security Features:');
-  console.log('  - Password hashing with bcrypt');
-  console.log('  - JWT session tokens (secure HttpOnly cookies)');
-  console.log('  - Usage counter with configurable expiry');
-  console.log('  - Admin-only password recovery');
-  console.log(`  - SameSite=strict cookies; Secure=${!LOCALHOST_ONLY}`);
-  console.log('  - CORS protection (port 9040 origins + custom)');
-  console.log('  - IP-based access control (optional)');
-  console.log('');
-  console.log('============================================================');
-});
+async function startServer() {
+  // Initialize Auth-Vault (Keycloak + Vault)
+  const authVaultActive = await initAuthVault(JWT_SECRET);
+
+  app.listen(PORT, LISTEN_HOST, () => {
+    console.log('');
+    console.log('============================================================');
+    console.log('  NetViz Pro Authentication Server');
+    console.log('============================================================');
+    console.log(`  Status: Running`);
+    console.log(`  Port: ${PORT}`);
+    console.log(`  Host: ${LISTEN_HOST}`);
+    console.log(`  Access: ${LOCALHOST_ONLY ? 'Localhost only' : 'Network accessible'}`);
+    console.log(`  Session Timeout: ${SESSION_TIMEOUT}s`);
+    console.log('');
+    console.log('  Auth-Vault:');
+    if (authVaultActive) {
+      console.log(`  - Status: Active (mode: ${getAuthMode()})`);
+    } else {
+      console.log(`  - Status: Inactive (using legacy auth)`);
+    }
+    console.log('');
+    console.log('  Access Control:');
+    if (ALLOWED_IPS && ALLOWED_IPS.length > 0) {
+      console.log(`  - IP Allowlist: ${ALLOWED_IPS.join(', ')}`);
+    } else {
+      console.log(`  - IP Allowlist: All IPs allowed (no restriction)`);
+    }
+    if (ALLOWED_CORS_ORIGINS.length > 0) {
+      console.log(`  - Extra CORS Origins: ${ALLOWED_CORS_ORIGINS.join(', ')}`);
+    }
+    console.log('');
+    console.log('  Security Features:');
+    console.log('  - Password hashing with bcrypt');
+    console.log('  - JWT session tokens (secure HttpOnly cookies)');
+    console.log('  - Usage counter with configurable expiry');
+    console.log('  - Admin-only password recovery');
+    console.log(`  - SameSite=strict cookies; Secure=${!LOCALHOST_ONLY}`);
+    console.log('  - CORS protection (port 9040 origins + custom)');
+    console.log('  - IP-based access control (optional)');
+    console.log('');
+    console.log('============================================================');
+  });
+}
+
+startServer();
 
 export default app;
