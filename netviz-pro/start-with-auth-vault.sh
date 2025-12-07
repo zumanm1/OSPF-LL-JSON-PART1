@@ -1,12 +1,22 @@
 #!/bin/bash
 # =============================================================================
-# NetViz Pro - Start with Auth-Vault
+# NetViz Pro - Start with Auth-Vault (Native Installation)
 # =============================================================================
-# This script ensures Auth-Vault (Keycloak + Vault) is running before starting
-# NetViz Pro. It handles installation, startup, and health verification.
+# This script ensures Auth-Vault (Keycloak + Vault) is running NATIVELY before
+# starting NetViz Pro. No Docker required!
 #
-# Works on: macOS, Linux
-# Paths are relative to $HOME directory
+# Features:
+#   - Installs Keycloak and Vault natively (no Docker)
+#   - Works on macOS and Linux
+#   - Uses $HOME/auth-vault for installation
+#   - Auto-detects and installs dependencies (Java 17, etc.)
+#   - Does not interfere with other running OSPF apps
+#
+# Usage:
+#   ./start-with-auth-vault.sh           # Interactive mode
+#   ./start-with-auth-vault.sh --auto    # Non-interactive (auto-install)
+#   ./start-with-auth-vault.sh --help    # Show help
+#
 # =============================================================================
 
 set -e
@@ -39,7 +49,6 @@ GATEWAY_PORT=9040
 AUTH_SERVER_PORT=9041
 
 # Timeouts
-DOCKER_WAIT_TIMEOUT=60
 SERVICE_WAIT_TIMEOUT=120
 
 # Detect OS
@@ -184,9 +193,9 @@ else
     log_success "Auth-Vault found at $AUTH_VAULT_DIR"
 fi
 
-# Check for docker-compose.yml
-if [ ! -f "$AUTH_VAULT_DIR/docker-compose.yml" ]; then
-    log_error "docker-compose.yml not found in auth-vault"
+# Check for auth-vault.sh (native installation script)
+if [ ! -f "$AUTH_VAULT_DIR/auth-vault.sh" ]; then
+    log_error "auth-vault.sh not found in auth-vault"
     log_info "The auth-vault installation may be incomplete"
     echo ""
     echo -e "  ${YELLOW}Try reinstalling:${NC}"
@@ -209,98 +218,121 @@ if [ ! -f "$AUTH_VAULT_DIR/.env" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# Step 2: Check Docker
+# Step 2: Check Native Auth-Vault Installation
 # -----------------------------------------------------------------------------
 
 echo ""
-echo -e "${CYAN}Step 2: Checking Docker...${NC}"
+echo -e "${CYAN}Step 2: Checking Auth-Vault native installation...${NC}"
 log_info "Detected OS: $OS_NAME"
 
-if ! command -v docker &> /dev/null; then
-    log_error "Docker is not installed"
-    echo ""
-    if [ "$OS_NAME" = "macos" ]; then
-        echo -e "  ${YELLOW}Install Docker Desktop:${NC}"
-        echo -e "    https://www.docker.com/products/docker-desktop"
-    elif [ "$OS_NAME" = "linux" ]; then
-        echo -e "  ${YELLOW}Install Docker on Linux:${NC}"
-        echo -e "    curl -fsSL https://get.docker.com | sh"
-        echo -e "    sudo usermod -aG docker \$USER"
-        echo -e "    # Log out and back in, then run:"
-        echo -e "    sudo systemctl start docker"
-    fi
-    echo ""
+# Check if auth-vault.sh exists
+if [ ! -f "$AUTH_VAULT_DIR/auth-vault.sh" ]; then
+    log_error "auth-vault.sh not found in $AUTH_VAULT_DIR"
     exit 1
 fi
 
-# Check if Docker daemon is running
-if ! docker info >/dev/null 2>&1; then
-    log_warning "Docker daemon is not running"
+# Make sure it's executable
+chmod +x "$AUTH_VAULT_DIR/auth-vault.sh"
+
+# Check if Keycloak and Vault are installed natively
+KEYCLOAK_INSTALLED=false
+VAULT_INSTALLED=false
+
+if [ -d "$AUTH_VAULT_DIR/bin/keycloak" ]; then
+    KEYCLOAK_INSTALLED=true
+    log_success "Keycloak is installed natively"
+else
+    log_warning "Keycloak is not installed"
+fi
+
+if [ -f "$AUTH_VAULT_DIR/bin/vault" ]; then
+    VAULT_INSTALLED=true
+    log_success "Vault is installed natively"
+else
+    log_warning "Vault is not installed"
+fi
+
+# If not installed, run the install command
+if [ "$KEYCLOAK_INSTALLED" = false ] || [ "$VAULT_INSTALLED" = false ]; then
+    echo ""
+    log_warning "Auth-Vault components need to be installed"
+    echo ""
+    echo -e "  This will install Keycloak and Vault natively (no Docker required)."
+    echo -e "  Installation includes: Java 17, Keycloak, Vault, and dependencies."
+    echo ""
     
-    if [ "$OS_NAME" = "macos" ]; then
-        log_info "Starting Docker Desktop..."
-        open -a Docker
-    elif [ "$OS_NAME" = "linux" ]; then
-        log_info "Attempting to start Docker service..."
-        if command -v systemctl &> /dev/null; then
-            sudo systemctl start docker 2>/dev/null || {
-                log_error "Failed to start Docker. Try: sudo systemctl start docker"
-                exit 1
-            }
+    if [ "$AUTO_INSTALL" = true ]; then
+        REPLY="y"
+        log_info "Auto-installing Auth-Vault components (--auto flag detected)"
+    else
+        read -p "Would you like to install Auth-Vault components now? (y/n): " -n 1 -r
+        echo ""
+    fi
+    
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Running auth-vault.sh install..."
+        cd "$AUTH_VAULT_DIR"
+        ./auth-vault.sh install
+        
+        if [ $? -eq 0 ]; then
+            log_success "Auth-Vault components installed successfully"
         else
-            log_error "Please start Docker manually: sudo service docker start"
+            log_error "Failed to install Auth-Vault components"
+            echo ""
+            echo -e "  ${YELLOW}Try installing manually:${NC}"
+            echo -e "    cd $AUTH_VAULT_DIR"
+            echo -e "    ./auth-vault.sh install"
+            echo ""
             exit 1
         fi
     else
-        log_error "Please start Docker manually"
+        log_error "Auth-Vault components are required"
+        echo ""
+        echo -e "  ${YELLOW}To install manually:${NC}"
+        echo -e "    cd $AUTH_VAULT_DIR"
+        echo -e "    ./auth-vault.sh install"
+        echo ""
         exit 1
     fi
-    
-    log_info "Waiting for Docker to start (timeout: ${DOCKER_WAIT_TIMEOUT}s)..."
-    
-    start_time=$(date +%s)
-    while ! docker info >/dev/null 2>&1; do
-        current_time=$(date +%s)
-        elapsed=$((current_time - start_time))
-        
-        if [ $elapsed -ge $DOCKER_WAIT_TIMEOUT ]; then
-            log_error "Docker failed to start within ${DOCKER_WAIT_TIMEOUT} seconds"
-            exit 1
-        fi
-        
-        sleep 2
-        echo -n "."
-    done
-    echo ""
-    log_success "Docker is now running"
-else
-    log_success "Docker is running"
 fi
 
 # -----------------------------------------------------------------------------
-# Step 3: Start Auth-Vault Services
+# Step 3: Start Auth-Vault Services (Native)
 # -----------------------------------------------------------------------------
 
 echo ""
-echo -e "${CYAN}Step 3: Starting Auth-Vault services...${NC}"
+echo -e "${CYAN}Step 3: Starting Auth-Vault services (native)...${NC}"
 
 cd "$AUTH_VAULT_DIR"
 
-# Check if containers are already running
-KEYCLOAK_RUNNING=$(docker ps --filter "name=keycloak" --filter "status=running" -q)
-VAULT_RUNNING=$(docker ps --filter "name=vault" --filter "status=running" -q)
+# Check if services are already running by checking ports
+KEYCLOAK_RUNNING=false
+VAULT_RUNNING=false
 
-if [ -n "$KEYCLOAK_RUNNING" ] && [ -n "$VAULT_RUNNING" ]; then
+if check_port $KEYCLOAK_PORT; then
+    KEYCLOAK_RUNNING=true
+fi
+
+if check_port $VAULT_PORT; then
+    VAULT_RUNNING=true
+fi
+
+if [ "$KEYCLOAK_RUNNING" = true ] && [ "$VAULT_RUNNING" = true ]; then
     log_success "Auth-Vault services are already running"
 else
-    log_info "Starting Keycloak and Vault containers..."
+    log_info "Starting Keycloak and Vault natively..."
     
-    docker compose up -d
+    ./auth-vault.sh start
     
     if [ $? -eq 0 ]; then
-        log_success "Docker containers started"
+        log_success "Auth-Vault services started"
     else
-        log_error "Failed to start Docker containers"
+        log_error "Failed to start Auth-Vault services"
+        echo ""
+        echo -e "  ${YELLOW}Try starting manually:${NC}"
+        echo -e "    cd $AUTH_VAULT_DIR"
+        echo -e "    ./auth-vault.sh start"
+        echo ""
         exit 1
     fi
 fi
@@ -506,9 +538,10 @@ echo -e "  ${BLUE}NetViz Pro:${NC}"
 echo -e "    Application:     http://localhost:$GATEWAY_PORT"
 echo -e "    Auth Server:     http://localhost:$AUTH_SERVER_PORT/api/health"
 echo ""
-echo -e "  ${BLUE}Auth-Vault Services (shared by all apps):${NC}"
+echo -e "  ${BLUE}Auth-Vault Services (native, shared by all apps):${NC}"
 echo -e "    Keycloak Admin:  http://localhost:$KEYCLOAK_PORT/admin"
 echo -e "    Vault UI:        http://localhost:$VAULT_PORT/ui"
+echo -e "    Installation:    $AUTH_VAULT_DIR"
 echo ""
 echo -e "  ${YELLOW}Integration Status:${NC}"
 echo -e "    Auth Mode:       $AUTH_MODE"
