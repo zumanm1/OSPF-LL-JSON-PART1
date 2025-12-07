@@ -272,29 +272,70 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Step 6: Stop Existing NetViz Pro Servers
+# Step 6: Check Other Running OSPF Apps (Non-Destructive)
 # -----------------------------------------------------------------------------
 
 echo ""
-echo -e "${CYAN}Step 6: Stopping existing NetViz Pro servers...${NC}"
+echo -e "${CYAN}Step 6: Checking other OSPF applications...${NC}"
 
-# Kill any existing processes on our ports
-for port in $GATEWAY_PORT $AUTH_SERVER_PORT 9042; do
+# Define all OSPF app ports (we will NOT touch these)
+OTHER_APP_PORTS=(
+    "9050:9051:Device Manager"
+    "9080:9081:Visualizer Pro"
+    "9090:9091:Impact Planner"
+    "9100:9101:Tempo-X"
+)
+
+RUNNING_APPS=()
+for app_info in "${OTHER_APP_PORTS[@]}"; do
+    IFS=':' read -r frontend backend name <<< "$app_info"
+    if check_port $frontend || check_port $backend; then
+        RUNNING_APPS+=("$name (ports $frontend/$backend)")
+    fi
+done
+
+if [ ${#RUNNING_APPS[@]} -gt 0 ]; then
+    log_info "Other OSPF apps currently running (will NOT be affected):"
+    for app in "${RUNNING_APPS[@]}"; do
+        echo -e "    ${GREEN}✓${NC} $app"
+    done
+else
+    log_info "No other OSPF apps are currently running"
+fi
+
+# -----------------------------------------------------------------------------
+# Step 7: Stop Existing NetViz Pro Servers ONLY
+# -----------------------------------------------------------------------------
+
+echo ""
+echo -e "${CYAN}Step 7: Managing NetViz Pro servers (ports 9040-9042 only)...${NC}"
+
+# ONLY kill processes on NetViz Pro ports - DO NOT touch other apps
+NETVIZ_PORTS=($GATEWAY_PORT $AUTH_SERVER_PORT 9042)
+STOPPED_ANY=false
+
+for port in "${NETVIZ_PORTS[@]}"; do
     if check_port $port; then
-        log_info "Stopping process on port $port..."
+        log_info "Stopping existing NetViz Pro process on port $port..."
         lsof -ti :$port | xargs kill -9 2>/dev/null || true
+        STOPPED_ANY=true
     fi
 done
 
 sleep 2
-log_success "Existing servers stopped"
+
+if [ "$STOPPED_ANY" = true ]; then
+    log_success "Existing NetViz Pro servers stopped"
+else
+    log_info "No existing NetViz Pro servers were running"
+fi
 
 # -----------------------------------------------------------------------------
-# Step 7: Start NetViz Pro
+# Step 8: Start NetViz Pro
 # -----------------------------------------------------------------------------
 
 echo ""
-echo -e "${CYAN}Step 7: Starting NetViz Pro...${NC}"
+echo -e "${CYAN}Step 8: Starting NetViz Pro...${NC}"
 
 cd "$NETVIZ_DIR"
 
@@ -318,11 +359,11 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Step 8: Verify Integration
+# Step 9: Verify Integration
 # -----------------------------------------------------------------------------
 
 echo ""
-echo -e "${CYAN}Step 8: Verifying Auth-Vault integration...${NC}"
+echo -e "${CYAN}Step 9: Verifying Auth-Vault integration...${NC}"
 
 sleep 5
 
@@ -346,16 +387,33 @@ echo -e "${CYAN}================================================================
 echo -e "${GREEN}  NetViz Pro is now running with Auth-Vault!${NC}"
 echo -e "${CYAN}=============================================================================${NC}"
 echo ""
-echo -e "  ${BLUE}Application:${NC}     http://localhost:$GATEWAY_PORT"
-echo -e "  ${BLUE}Auth Server:${NC}     http://localhost:$AUTH_SERVER_PORT/api/health"
-echo -e "  ${BLUE}Keycloak Admin:${NC}  http://localhost:$KEYCLOAK_PORT/admin"
-echo -e "  ${BLUE}Vault UI:${NC}        http://localhost:$VAULT_PORT/ui"
+echo -e "  ${BLUE}NetViz Pro:${NC}"
+echo -e "    Application:     http://localhost:$GATEWAY_PORT"
+echo -e "    Auth Server:     http://localhost:$AUTH_SERVER_PORT/api/health"
 echo ""
-echo -e "  ${YELLOW}Auth Mode:${NC}       $AUTH_MODE"
-echo -e "  ${YELLOW}Auth-Vault:${NC}      $AUTH_VAULT_STATUS"
+echo -e "  ${BLUE}Auth-Vault Services (shared by all apps):${NC}"
+echo -e "    Keycloak Admin:  http://localhost:$KEYCLOAK_PORT/admin"
+echo -e "    Vault UI:        http://localhost:$VAULT_PORT/ui"
 echo ""
+echo -e "  ${YELLOW}Integration Status:${NC}"
+echo -e "    Auth Mode:       $AUTH_MODE"
+echo -e "    Auth-Vault:      $AUTH_VAULT_STATUS"
+echo ""
+
+# Show other running apps in summary
+if [ ${#RUNNING_APPS[@]} -gt 0 ]; then
+    echo -e "  ${GREEN}Other OSPF Apps Running (not affected):${NC}"
+    for app in "${RUNNING_APPS[@]}"; do
+        echo -e "    ✓ $app"
+    done
+    echo ""
+fi
+
 echo -e "  ${CYAN}Default Credentials:${NC}"
 echo -e "    Keycloak Admin: admin / SecureAdm1n!2025"
 echo -e "    NetViz Admin:   netviz_admin / (see .env.local)"
+echo ""
+echo -e "  ${YELLOW}Note:${NC} This script only manages NetViz Pro (ports 9040-9042)."
+echo -e "        Other OSPF apps and Auth-Vault services are not affected."
 echo ""
 echo -e "${CYAN}=============================================================================${NC}"
