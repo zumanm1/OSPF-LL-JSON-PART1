@@ -1,8 +1,42 @@
 # Auth-Vault Integration: NetViz Pro (OSPF-LL-JSON-PART1)
 
-## Status: ✅ INTEGRATED
+## Status: ✅ INTEGRATED & VALIDATED (2025-12-07)
 
 This application has been fully integrated with the Auth-Vault infrastructure (Keycloak + HashiCorp Vault).
+
+### Current Status
+
+| Component | Status | Details |
+|-----------|--------|---------|
+| **Keycloak** | ✅ Running | Port 9120, realm `ospf-ll-json-part1` |
+| **Vault** | ✅ Running | Port 9121, dev mode |
+| **Auth Mode** | ✅ `keycloak` | Full Auth-Vault integration active |
+| **Gateway** | ✅ Running | Port 9040 (public-facing) |
+| **Auth Server** | ✅ Running | Port 9041 (internal) |
+
+### Validation Results
+
+```bash
+# Health Check Response
+curl http://localhost:9041/api/health
+{
+  "status": "ok",
+  "service": "NetViz Pro Auth Server",
+  "authVault": "active",
+  "authMode": "keycloak"
+}
+
+# Auth Config Response
+curl http://localhost:9041/api/auth/config
+{
+  "authMode": "keycloak",
+  "keycloak": {
+    "url": "http://localhost:9120",
+    "realm": "ospf-ll-json-part1",
+    "clientId": "netviz-pro-api"
+  }
+}
+```
 
 ## Architecture
 
@@ -153,18 +187,79 @@ const requireAuth = async (req, res, next) => {
 };
 ```
 
+## Quick Start
+
+### Step 1: Start Auth-Vault Services (Docker)
+
+```bash
+# Navigate to auth-vault directory
+cd /Users/macbook/auth-vault
+
+# Start Docker Desktop (macOS)
+open -a Docker
+
+# Wait for Docker to start, then:
+docker compose up -d
+
+# Verify services are running
+docker ps
+# Should show: keycloak, keycloak-db, vault
+```
+
+### Step 2: Configure NetViz Pro
+
+Ensure your `.env.local` has the auth-vault settings:
+
+```bash
+# In /Users/macbook/OSPF-LL-JSON-PART1/netviz-pro/.env.local
+
+# Auth-Vault Integration
+KEYCLOAK_URL=http://localhost:9120
+KEYCLOAK_REALM=ospf-ll-json-part1
+KEYCLOAK_CLIENT_ID=netviz-pro-api
+
+# Vault (using dev token)
+VAULT_ADDR=http://localhost:9121
+VAULT_TOKEN=ospf-vault-dev-token-2025
+```
+
+### Step 3: Start NetViz Pro
+
+```bash
+cd /Users/macbook/OSPF-LL-JSON-PART1/netviz-pro
+./start.sh
+```
+
+### Step 4: Verify Integration
+
+```bash
+# Check health endpoint
+curl http://localhost:9041/api/health | jq .
+
+# Expected response:
+{
+  "status": "ok",
+  "authVault": "active",
+  "authMode": "keycloak"
+}
+```
+
+### Step 5: Access the Application
+
+Open http://localhost:9040 in your browser.
+
 ## Usage
 
 ### Starting with Auth-Vault
 
 ```bash
 # 1. Ensure auth-vault is running
-cd /path/to/auth-vault
-./auth-vault.sh start
+cd /Users/macbook/auth-vault
+docker compose up -d
 
 # 2. Start the application
-cd /path/to/OSPF-LL-JSON-PART1/netviz-pro
-npm run start
+cd /Users/macbook/OSPF-LL-JSON-PART1/netviz-pro
+./start.sh
 ```
 
 ### Checking Auth Status

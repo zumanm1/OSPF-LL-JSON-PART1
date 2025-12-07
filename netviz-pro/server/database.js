@@ -51,6 +51,20 @@ db.exec(`
     success INTEGER DEFAULT 1,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS devices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    type TEXT DEFAULT 'router',
+    ip_address TEXT NOT NULL,
+    protocol TEXT DEFAULT 'ssh',
+    port INTEGER DEFAULT 22,
+    username TEXT,
+    password TEXT, -- Note: Should be encrypted in production
+    created_by INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+  );
 `);
 
 // Add new columns to existing tables if they don't exist (migration)
@@ -259,6 +273,36 @@ export const deleteUser = (id) => {
 
 export const resetUserUsage = (id) => {
   db.prepare('UPDATE users SET current_uses = 0, is_expired = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(id);
+  return { success: true };
+};
+
+// ============================================================================
+// DEVICE OPERATIONS
+// ============================================================================
+
+export const createDevice = (device) => {
+  const { name, type, ip_address, protocol, port, username, password, created_by } = device;
+  try {
+    const result = db.prepare(`
+      INSERT INTO devices (name, type, ip_address, protocol, port, username, password, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(name, type, ip_address, protocol, port, username, password, created_by);
+    return { success: true, deviceId: result.lastInsertRowid };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getDevicesByUser = (userId) => {
+  return db.prepare('SELECT id, name, type, ip_address, protocol, port, username, created_at FROM devices WHERE created_by = ?').all(userId);
+};
+
+export const getDeviceById = (id) => {
+  return db.prepare('SELECT * FROM devices WHERE id = ?').get(id);
+};
+
+export const deleteDevice = (id) => {
+  db.prepare('DELETE FROM devices WHERE id = ?').run(id);
   return { success: true };
 };
 

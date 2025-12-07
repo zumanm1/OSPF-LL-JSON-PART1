@@ -115,12 +115,12 @@ The auth-vault integration for NetViz Pro has been thoroughly validated. The app
 
 ```json
 {
-  "authMode": "legacy",
-  "authVault": "inactive"
+  "authMode": "keycloak",
+  "authVault": "active"
 }
 ```
 
-**Note**: Auth-Vault is inactive because Keycloak is not running at `http://localhost:9120`. This is expected behavior - the application gracefully falls back to legacy JWT authentication.
+**Status**: Auth-Vault is **ACTIVE**! Keycloak is running at `http://localhost:9120` and Vault at `http://localhost:9121`. The application is using Keycloak for authentication with Vault for secrets management.
 
 ### Keycloak Configuration (When Active)
 

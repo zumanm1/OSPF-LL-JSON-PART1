@@ -55,6 +55,8 @@ import {
   getJwtSecret
 } from './lib/auth-unified.js';
 
+import deviceRouter from './pyats.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
@@ -433,6 +435,14 @@ app.post('/api/auth/change-password', requireAuth, (req, res) => {
 });
 
 // ============================================================================
+// DEVICE API ROUTES
+// ============================================================================
+app.use('/api/devices', deviceRouter);
+
+// ============================================================================
+// ADMIN-ONLY ROUTES
+
+// ============================================================================
 // ADMIN-ONLY ROUTES
 // ============================================================================
 
@@ -566,7 +576,7 @@ setInterval(() => {
 }, 3600000);
 
 // Optional: IP whitelist
-const ADMIN_RESET_ALLOWED_IPS = process.env.ADMIN_RESET_ALLOWED_IPS 
+const ADMIN_RESET_ALLOWED_IPS = process.env.ADMIN_RESET_ALLOWED_IPS
   ? process.env.ADMIN_RESET_ALLOWED_IPS.split(',').map(ip => ip.trim())
   : null; // null = allow all IPs (less secure but more flexible)
 
@@ -588,9 +598,9 @@ app.post('/api/auth/reset-admin', pinProtectedRateLimit, (req, res) => {
   if (attempts.blockUntil > now) {
     const remainingMinutes = Math.ceil((attempts.blockUntil - now) / 60000);
     console.warn(`[Auth] Reset blocked - IP ${clientIP} is rate limited`);
-    return res.status(429).json({ 
-      error: 'Too many reset attempts', 
-      message: `Please try again in ${remainingMinutes} minute(s)` 
+    return res.status(429).json({
+      error: 'Too many reset attempts',
+      message: `Please try again in ${remainingMinutes} minute(s)`
     });
   }
 
@@ -621,7 +631,7 @@ app.post('/api/auth/reset-admin', pinProtectedRateLimit, (req, res) => {
 
     resetAttempts.set(clientIP, attempts);
 
-    return res.status(401).json({ 
+    return res.status(401).json({
       error: 'Invalid PIN',
       attemptsRemaining: Math.max(0, 3 - attempts.count)
     });

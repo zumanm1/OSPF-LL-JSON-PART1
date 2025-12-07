@@ -104,13 +104,43 @@ NETVIZ_PORT=8080 ./netviz.sh start
 
 ## 🔐 Authentication System
 
-NetViz Pro includes enterprise-grade authentication:
+NetViz Pro includes enterprise-grade authentication with **Auth-Vault integration**:
+
+### Auth-Vault Integration (Keycloak + Vault)
+
+| Component | Status | Port |
+|-----------|--------|------|
+| **Keycloak** | ✅ Integrated | 9120 |
+| **Vault** | ✅ Integrated | 9121 |
+| **Auth Mode** | `keycloak` or `legacy` | - |
+
+**Quick Start with Auth-Vault:**
+
+```bash
+# 1. Start Auth-Vault services (Docker)
+cd /Users/macbook/auth-vault
+docker compose up -d
+
+# 2. Start NetViz Pro
+cd /Users/macbook/OSPF-LL-JSON-PART1/netviz-pro
+./start.sh
+
+# 3. Verify integration
+curl http://localhost:9041/api/health | jq .
+# Should show: "authVault": "active", "authMode": "keycloak"
+```
+
+See [README-AUTH-VAULT.md](../README-AUTH-VAULT.md) for detailed integration documentation.
+
+### Security Features
 
 - **JWT-based sessions** with secure cookies
-- **Rate limiting** on auth endpoints
+- **Dual auth mode** - Keycloak SSO or legacy JWT
+- **Rate limiting** on auth endpoints (5 attempts / 15 min)
 - **Helmet security headers** (CSP, HSTS, X-Frame-Options)
 - **Admin panel** for user management
 - **Usage tracking** and expiry controls
+- **CORS protection** with configurable origins
 
 ## 🛠️ System Requirements
 
