@@ -4,33 +4,48 @@ A comprehensive OSPF (Open Shortest Path First) network topology visualizer and 
 
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
+### Option 1: Start with Auth-Vault (Recommended)
+
+This is the recommended way to run NetViz Pro with full Keycloak + Vault integration:
 
 ```bash
+# Clone the repository
 git clone https://github.com/zumanm1/OSPF-LL-JSON-PART1.git
 cd OSPF-LL-JSON-PART1/netviz-pro
+
+# Install dependencies (first time only)
+npm install --legacy-peer-deps
+
+# Start with Auth-Vault (handles everything automatically)
+./start-with-auth-vault.sh
 ```
 
-### 2. First-Time Setup (Recommended)
+This script will:
+1. ✅ Check if auth-vault is installed (clone if missing)
+2. ✅ Start Docker Desktop if not running
+3. ✅ Start Keycloak and Vault containers
+4. ✅ Wait for services to be healthy
+5. ✅ Configure NetViz Pro environment
+6. ✅ Start all NetViz Pro servers
+
+**Access the app:** http://localhost:9040
+
+### Option 2: Standard Start (Legacy Mode)
+
+If you don't need Auth-Vault integration:
 
 ```bash
-# Option A: Full isolated setup with nvm (recommended)
+# Clone the repository
+git clone https://github.com/zumanm1/OSPF-LL-JSON-PART1.git
+cd OSPF-LL-JSON-PART1/netviz-pro
+
+# First-time setup with nvm (recommended)
 ./netviz.sh setup     # Installs nvm + Node.js v20 (one-time)
 ./netviz.sh deps      # Install npm dependencies
 ./netviz.sh start     # Start servers
-
-# Option B: Quick start (if Node.js already installed)
-./netviz.sh install && ./netviz.sh deps && ./netviz.sh start
 ```
 
-### 3. Returning Users
-
-```bash
-# Just start - auto-switches to correct Node version if nvm installed
-./netviz.sh start
-```
-
-### 4. Manual Installation
+### Option 3: Manual Installation
 
 ```bash
 # Install frontend dependencies
@@ -50,6 +65,20 @@ npm run dev           # Vite only (port 9042)
 
 **Default credentials:** See `.env.local` for admin username/password
 
+### Verify Auth-Vault Integration
+
+```bash
+# Check if Auth-Vault is active
+curl http://localhost:9041/api/health | jq .
+
+# Expected response when Auth-Vault is active:
+{
+  "status": "ok",
+  "authVault": "active",
+  "authMode": "keycloak"
+}
+```
+
 ## 📜 Available Scripts
 
 ### Setup Commands
@@ -65,6 +94,7 @@ npm run dev           # Vite only (port 9042)
 
 | Script | Description |
 |--------|-------------|
+| `./start-with-auth-vault.sh` | **Recommended**: Start with Keycloak + Vault (handles everything) |
 | `./netviz.sh start` | Start Gateway (9040), Auth (9041), and Vite (9042) servers |
 | `./netviz.sh stop` | Stop all running servers |
 | `./netviz.sh restart` | Restart all servers |
