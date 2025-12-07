@@ -4,6 +4,9 @@
 # =============================================================================
 # This script ensures Auth-Vault (Keycloak + Vault) is running before starting
 # NetViz Pro. It handles installation, startup, and health verification.
+#
+# Works on: macOS, Linux
+# Paths are relative to $HOME directory
 # =============================================================================
 
 set -e
@@ -16,9 +19,20 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Configuration
-AUTH_VAULT_DIR="/Users/macbook/auth-vault"
-NETVIZ_DIR="/Users/macbook/OSPF-LL-JSON-PART1/netviz-pro"
+# -----------------------------------------------------------------------------
+# Configuration - Using $HOME for cross-platform compatibility
+# -----------------------------------------------------------------------------
+HOME_DIR="${HOME:-$HOME}"
+
+# Auth-Vault location (relative to home)
+AUTH_VAULT_DIR="$HOME_DIR/auth-vault"
+AUTH_VAULT_REPO="https://github.com/zumanm1/auth-vault.git"
+
+# NetViz Pro location - detect from script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NETVIZ_DIR="$SCRIPT_DIR"
+
+# Ports
 KEYCLOAK_PORT=9120
 VAULT_PORT=9121
 GATEWAY_PORT=9040
@@ -27,6 +41,34 @@ AUTH_SERVER_PORT=9041
 # Timeouts
 DOCKER_WAIT_TIMEOUT=60
 SERVICE_WAIT_TIMEOUT=120
+
+# Detect OS
+OS_TYPE="$(uname -s)"
+case "$OS_TYPE" in
+    Linux*)  OS_NAME="linux";;
+    Darwin*) OS_NAME="macos";;
+    *)       OS_NAME="unknown";;
+esac
+
+# Parse command line arguments
+AUTO_INSTALL=false
+for arg in "$@"; do
+    case $arg in
+        --auto|-y)
+            AUTO_INSTALL=true
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --auto, -y    Automatically install auth-vault if not found"
+            echo "  --help, -h    Show this help message"
+            echo ""
+            exit 0
+            ;;
+    esac
+done
 
 echo -e "${CYAN}"
 echo "============================================================================="
@@ -85,18 +127,57 @@ wait_for_url() {
 # -----------------------------------------------------------------------------
 
 echo -e "${CYAN}Step 1: Checking Auth-Vault installation...${NC}"
+log_info "Auth-Vault directory: $AUTH_VAULT_DIR"
+log_info "NetViz Pro directory: $NETVIZ_DIR"
 
 if [ ! -d "$AUTH_VAULT_DIR" ]; then
-    log_warning "Auth-Vault not found at $AUTH_VAULT_DIR"
-    log_info "Cloning auth-vault repository..."
+    echo ""
+    log_warning "Auth-Vault is not installed!"
+    echo ""
+    echo -e "  Auth-Vault provides centralized authentication (Keycloak) and"
+    echo -e "  secrets management (Vault) for all OSPF applications."
+    echo ""
+    echo -e "  ${BLUE}Installation location:${NC} $AUTH_VAULT_DIR"
+    echo -e "  ${BLUE}Repository:${NC} $AUTH_VAULT_REPO"
+    echo ""
     
-    cd "$(dirname "$AUTH_VAULT_DIR")"
-    git clone https://github.com/zumanm1/auth-vault.git
-    
-    if [ $? -eq 0 ]; then
-        log_success "Auth-Vault cloned successfully"
+    # Prompt user for installation (or auto-install if --auto flag)
+    if [ "$AUTO_INSTALL" = true ]; then
+        REPLY="y"
+        log_info "Auto-installing Auth-Vault (--auto flag detected)"
     else
-        log_error "Failed to clone auth-vault"
+        read -p "Would you like to install Auth-Vault now? (y/n): " -n 1 -r
+        echo ""
+    fi
+    
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Installing Auth-Vault to $AUTH_VAULT_DIR..."
+        
+        # Clone to home directory
+        cd "$HOME_DIR"
+        git clone "$AUTH_VAULT_REPO"
+        
+        if [ $? -eq 0 ]; then
+            log_success "Auth-Vault installed successfully"
+        else
+            log_error "Failed to clone auth-vault repository"
+            echo ""
+            echo -e "  ${YELLOW}Manual installation:${NC}"
+            echo -e "    cd $HOME_DIR"
+            echo -e "    git clone $AUTH_VAULT_REPO"
+            echo ""
+            exit 1
+        fi
+    else
+        log_error "Auth-Vault is required to run NetViz Pro with Keycloak/Vault"
+        echo ""
+        echo -e "  ${YELLOW}To install manually:${NC}"
+        echo -e "    cd $HOME_DIR"
+        echo -e "    git clone $AUTH_VAULT_REPO"
+        echo ""
+        echo -e "  ${YELLOW}Or run NetViz Pro without Auth-Vault:${NC}"
+        echo -e "    ./start.sh"
+        echo ""
         exit 1
     fi
 else
@@ -106,6 +187,12 @@ fi
 # Check for docker-compose.yml
 if [ ! -f "$AUTH_VAULT_DIR/docker-compose.yml" ]; then
     log_error "docker-compose.yml not found in auth-vault"
+    log_info "The auth-vault installation may be incomplete"
+    echo ""
+    echo -e "  ${YELLOW}Try reinstalling:${NC}"
+    echo -e "    rm -rf $AUTH_VAULT_DIR"
+    echo -e "    git clone $AUTH_VAULT_REPO $AUTH_VAULT_DIR"
+    echo ""
     exit 1
 fi
 
@@ -114,7 +201,7 @@ if [ ! -f "$AUTH_VAULT_DIR/.env" ]; then
     if [ -f "$AUTH_VAULT_DIR/.env.example" ]; then
         log_warning ".env not found, copying from .env.example"
         cp "$AUTH_VAULT_DIR/.env.example" "$AUTH_VAULT_DIR/.env"
-        log_success ".env file created"
+        log_success ".env file created at $AUTH_VAULT_DIR/.env"
     else
         log_error ".env.example not found in auth-vault"
         exit 1
@@ -127,19 +214,47 @@ fi
 
 echo ""
 echo -e "${CYAN}Step 2: Checking Docker...${NC}"
+log_info "Detected OS: $OS_NAME"
 
 if ! command -v docker &> /dev/null; then
     log_error "Docker is not installed"
-    log_info "Please install Docker Desktop from https://www.docker.com/products/docker-desktop"
+    echo ""
+    if [ "$OS_NAME" = "macos" ]; then
+        echo -e "  ${YELLOW}Install Docker Desktop:${NC}"
+        echo -e "    https://www.docker.com/products/docker-desktop"
+    elif [ "$OS_NAME" = "linux" ]; then
+        echo -e "  ${YELLOW}Install Docker on Linux:${NC}"
+        echo -e "    curl -fsSL https://get.docker.com | sh"
+        echo -e "    sudo usermod -aG docker \$USER"
+        echo -e "    # Log out and back in, then run:"
+        echo -e "    sudo systemctl start docker"
+    fi
+    echo ""
     exit 1
 fi
 
 # Check if Docker daemon is running
 if ! docker info >/dev/null 2>&1; then
     log_warning "Docker daemon is not running"
-    log_info "Starting Docker Desktop..."
     
-    open -a Docker
+    if [ "$OS_NAME" = "macos" ]; then
+        log_info "Starting Docker Desktop..."
+        open -a Docker
+    elif [ "$OS_NAME" = "linux" ]; then
+        log_info "Attempting to start Docker service..."
+        if command -v systemctl &> /dev/null; then
+            sudo systemctl start docker 2>/dev/null || {
+                log_error "Failed to start Docker. Try: sudo systemctl start docker"
+                exit 1
+            }
+        else
+            log_error "Please start Docker manually: sudo service docker start"
+            exit 1
+        fi
+    else
+        log_error "Please start Docker manually"
+        exit 1
+    fi
     
     log_info "Waiting for Docker to start (timeout: ${DOCKER_WAIT_TIMEOUT}s)..."
     
