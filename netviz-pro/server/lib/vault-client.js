@@ -86,6 +86,13 @@ class VaultClient {
   }
 
   async ensureAuthenticated() {
+    // If token was provided via environment, use it directly (no expiry check)
+    if (this.token && !this.roleId) {
+      // Token mode - token provided directly, no AppRole auth needed
+      return;
+    }
+    
+    // AppRole mode - authenticate if no token or token expired
     if (!this.token || Date.now() > this.tokenExpiry) {
       await this.authenticate();
     }
