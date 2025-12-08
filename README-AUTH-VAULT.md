@@ -189,21 +189,23 @@ const requireAuth = async (req, res, next) => {
 
 ## Quick Start
 
-### Step 1: Start Auth-Vault Services (Docker)
+### Step 1: Start Auth-Vault Services (Native - No Docker Required)
 
 ```bash
 # Navigate to auth-vault directory
-cd /Users/macbook/auth-vault
+cd ~/auth-vault
 
-# Start Docker Desktop (macOS)
-open -a Docker
+# Install (first time only) - installs Java 17, Keycloak, Vault natively
+./auth-vault.sh install
 
-# Wait for Docker to start, then:
-docker compose up -d
+# Start services natively
+./auth-vault.sh start
 
 # Verify services are running
-docker ps
-# Should show: keycloak, keycloak-db, vault
+./auth-vault.sh status
+# Or check endpoints:
+curl http://localhost:9120/health/ready
+curl http://localhost:9121/v1/sys/health
 ```
 
 ### Step 2: Configure NetViz Pro
@@ -253,13 +255,17 @@ Open http://localhost:9040 in your browser.
 ### Starting with Auth-Vault
 
 ```bash
-# 1. Ensure auth-vault is running
-cd /Users/macbook/auth-vault
-docker compose up -d
+# 1. Ensure auth-vault is running (native)
+cd ~/auth-vault
+./auth-vault.sh start
 
 # 2. Start the application
-cd /Users/macbook/OSPF-LL-JSON-PART1/netviz-pro
+cd ~/OSPF-LL-JSON-PART1/netviz-pro
 ./start.sh
+
+# Or use the one-command script:
+cd ~/OSPF-LL-JSON-PART1/netviz-pro
+./start-with-auth-vault.sh
 ```
 
 ### Checking Auth Status

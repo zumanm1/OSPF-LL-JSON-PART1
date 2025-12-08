@@ -350,7 +350,7 @@ if wait_for_url "http://localhost:$KEYCLOAK_PORT/health/ready" $SERVICE_WAIT_TIM
     log_success "Keycloak is healthy"
 else
     log_error "Keycloak failed to become healthy within ${SERVICE_WAIT_TIMEOUT}s"
-    log_info "Check logs: docker compose logs keycloak"
+    log_info "Check logs: cd ~/auth-vault && ./auth-vault.sh status"
     exit 1
 fi
 
@@ -360,7 +360,7 @@ if wait_for_url "http://localhost:$VAULT_PORT/v1/sys/health" $SERVICE_WAIT_TIMEO
     log_success "Vault is healthy"
 else
     log_error "Vault failed to become healthy within ${SERVICE_WAIT_TIMEOUT}s"
-    log_info "Check logs: docker compose logs vault"
+    log_info "Check logs: cd ~/auth-vault && ./auth-vault.sh status"
     exit 1
 fi
 

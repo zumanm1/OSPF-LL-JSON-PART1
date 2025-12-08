@@ -22,8 +22,8 @@ npm install --legacy-peer-deps
 
 This script will:
 1. ✅ Check if auth-vault is installed (clone if missing)
-2. ✅ Start Docker Desktop if not running
-3. ✅ Start Keycloak and Vault containers
+2. ✅ Install Keycloak and Vault natively (no Docker required)
+3. ✅ Start Auth-Vault services natively
 4. ✅ Wait for services to be healthy
 5. ✅ Configure NetViz Pro environment
 6. ✅ Start all NetViz Pro servers
@@ -144,18 +144,21 @@ NetViz Pro includes enterprise-grade authentication with **Auth-Vault integratio
 | **Vault** | ✅ Integrated | 9121 |
 | **Auth Mode** | `keycloak` or `legacy` | - |
 
-**Quick Start with Auth-Vault:**
+**Quick Start with Auth-Vault (Native - No Docker Required):**
 
 ```bash
-# 1. Start Auth-Vault services (Docker)
-cd /Users/macbook/auth-vault
-docker compose up -d
+# Option A: One-command start (recommended)
+cd ~/OSPF-LL-JSON-PART1/netviz-pro
+./start-with-auth-vault.sh
 
-# 2. Start NetViz Pro
-cd /Users/macbook/OSPF-LL-JSON-PART1/netviz-pro
+# Option B: Manual start
+cd ~/auth-vault
+./auth-vault.sh start    # Start Keycloak + Vault natively
+
+cd ~/OSPF-LL-JSON-PART1/netviz-pro
 ./start.sh
 
-# 3. Verify integration
+# Verify integration
 curl http://localhost:9041/api/health | jq .
 # Should show: "authVault": "active", "authMode": "keycloak"
 ```
