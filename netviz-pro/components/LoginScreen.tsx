@@ -18,7 +18,7 @@ import { useTheme } from '../context/ThemeContext';
 const AUTH_API_URL = '/api';
 
 const LoginScreen: React.FC = () => {
-  const { login, error, clearError, isLoading } = useAuth();
+  const { login, loginWithKeycloak, error, clearError, isLoading, authMode } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -133,15 +133,26 @@ const LoginScreen: React.FC = () => {
           </p>
         </div>
 
-        {/* Security Notice */}
-        <div
-          className={`flex items-center gap-2 p-3 rounded-lg mb-6 text-sm ${
-            isDark ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-50 text-blue-700'
-          }`}
-        >
-          <Server className="w-4 h-4 flex-shrink-0" />
-          <span>Localhost access only - No external connections</span>
-        </div>
+        {/* Auth Mode Notice */}
+        {authMode === 'keycloak' ? (
+          <div
+            className={`flex items-center gap-2 p-3 rounded-lg mb-6 text-sm ${
+              isDark ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-50 text-blue-700'
+            }`}
+          >
+            <Shield className="w-4 h-4 flex-shrink-0" />
+            <span><strong>Enterprise Auth:</strong> Connected to Keycloak SSO</span>
+          </div>
+        ) : (
+          <div
+            className={`flex items-center gap-2 p-3 rounded-lg mb-6 text-sm ${
+              isDark ? 'bg-emerald-900/30 text-emerald-300' : 'bg-emerald-50 text-emerald-700'
+            }`}
+          >
+            <Server className="w-4 h-4 flex-shrink-0" />
+            <span>Localhost access only - No external connections</span>
+          </div>
+        )}
 
         {/* Error Display */}
         {displayError && (
@@ -152,6 +163,30 @@ const LoginScreen: React.FC = () => {
           >
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{displayError}</span>
+          </div>
+        )}
+
+        {/* Keycloak SSO Button */}
+        {authMode === 'keycloak' && (
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={loginWithKeycloak}
+              className="w-full py-3 px-4 rounded-lg font-medium bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center gap-2 transition-colors"
+            >
+              <KeyRound className="w-5 h-5" />
+              <span>Sign in with SSO</span>
+            </button>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className={`w-full border-t ${isDark ? 'border-gray-700' : 'border-gray-300'}`} />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className={`px-2 ${isDark ? 'bg-gray-800 text-gray-500' : 'bg-white text-gray-500'}`}>
+                  Or use local credentials
+                </span>
+              </div>
+            </div>
           </div>
         )}
 

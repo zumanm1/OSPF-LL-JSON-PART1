@@ -5,26 +5,31 @@
  * - Usage tracking with expiry
  * - Dynamic API URL based on current host
  * - Admin role support
+ * - Keycloak SSO with PKCE
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { keycloak } from '../utils/keycloak';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+export type AuthMode = 'legacy' | 'keycloak';
+
 export interface User {
-  id: number;
+  id: number | string;
   username: string;
   role: 'admin' | 'user';
-  maxUses: number;
-  currentUses: number;
-  usesRemaining: number;
-  expiryEnabled: boolean;
-  isExpired: boolean;
+  maxUses?: number;
+  currentUses?: number;
+  usesRemaining?: number;
+  expiryEnabled?: boolean;
+  isExpired?: boolean;
   lastLogin?: string;
   mustChangePassword?: boolean;
   graceLoginsRemaining?: number;
   forcePasswordChange?: boolean;
+  authSource?: 'legacy' | 'keycloak';
 }
 
 export interface AuthContextType {
@@ -34,7 +39,9 @@ export interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   error: string | null;
+  authMode: AuthMode;
   login: (username: string, password: string) => Promise<boolean>;
+  loginWithKeycloak: () => void;
   logout: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   refreshUser: () => Promise<void>;
@@ -65,6 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authMode, setAuthMode] = useState<AuthMode>('legacy');
 
   // Check if user is admin
   const isAdmin = user?.role === 'admin';
@@ -105,10 +113,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [token]);
 
-  // Initialize auth state from session cookie
+  // Initialize auth state - check Keycloak first, then session cookie
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // Try to initialize Keycloak
+        const keycloakAvailable = await keycloak.init();
+
+        if (keycloakAvailable && keycloak.isAuthenticated()) {
+          // User is authenticated via Keycloak
+          const userInfo = keycloak.getUserInfo();
+          if (userInfo) {
+            const keycloakToken = keycloak.getAccessToken();
+            if (keycloakToken) setToken(keycloakToken);
+
+            setUser({
+              id: userInfo.id,
+              username: userInfo.username,
+              role: userInfo.roles[0] as 'admin' | 'user',
+              authSource: 'keycloak',
+            });
+            setAuthMode('keycloak');
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Keycloak mode available but not authenticated
+        if (keycloakAvailable) {
+          setAuthMode('keycloak');
+          setIsLoading(false);
+          return;
+        }
+
+        // Fall back to legacy session validation
         const response = await fetch(`${AUTH_API_URL}/auth/validate`, {
           method: 'GET',
           credentials: 'include'
@@ -117,15 +155,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (response.ok) {
           const data = await response.json();
           setToken(data.token || null);
-          setUser(data.user || null);
+          setUser(data.user ? { ...data.user, authSource: 'legacy' } : null);
         } else if (response.status === 401) {
           setToken(null);
           setUser(null);
         }
+        setAuthMode('legacy');
       } catch (err) {
         console.error('[Auth] Failed to validate session:', err);
         setToken(null);
         setUser(null);
+        setAuthMode('legacy');
       } finally {
         setIsLoading(false);
       }
@@ -136,6 +176,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Login function
   const login = async (username: string, password: string): Promise<boolean> => {
+    // In Keycloak mode, redirect to Keycloak login instead
+    if (authMode === 'keycloak') {
+      setError('Use Keycloak login in this mode');
+      return false;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -147,7 +193,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (data.success) {
         setToken(data.token);
-        setUser(data.user);
+        setUser({ ...data.user, authSource: 'legacy' });
 
         return true;
       } else {
@@ -163,8 +209,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Login with Keycloak SSO
+  const loginWithKeycloak = () => {
+    if (keycloak.isAvailable()) {
+      keycloak.login();
+    } else {
+      console.error('[Auth] Keycloak is not available');
+    }
+  };
+
   // Logout function
   const logout = async () => {
+    // Handle Keycloak logout
+    if (authMode === 'keycloak' && user?.authSource === 'keycloak') {
+      keycloak.logout();
+      return; // Keycloak will redirect
+    }
+
     try {
       if (token) {
         await apiCall('/auth/logout', { method: 'POST' });
@@ -231,7 +292,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isLoading,
         isAdmin,
         error,
+        authMode,
         login,
+        loginWithKeycloak,
         logout,
         changePassword,
         refreshUser,
