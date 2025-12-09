@@ -21,7 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Required Node version (from .nvmrc)
-REQUIRED_NODE_VERSION="20"
+REQUIRED_NODE_VERSION="24"
 
 # Default ports
 GATEWAY_PORT=${NETVIZ_PORT:-9040}

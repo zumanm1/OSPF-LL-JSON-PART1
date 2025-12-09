@@ -35,7 +35,8 @@ import {
   deleteSession,
   checkPasswordChangeRequired,
   getLoginHistory,
-  checkExpiry
+  checkExpiry,
+  testDatabaseConnection
 } from './database.js';
 
 import {
@@ -671,10 +672,12 @@ app.post('/api/auth/reset-admin', pinProtectedRateLimit, (req, res) => {
 // HEALTH CHECK
 // ============================================================================
 app.get('/api/health', (req, res) => {
+  const dbConnected = testDatabaseConnection();
   res.json({
-    status: 'ok',
+    status: dbConnected ? 'ok' : 'degraded',
     service: 'NetViz Pro Auth Server',
     network_accessible: true,
+    database: dbConnected ? 'connected' : 'disconnected',
     authVault: isAuthVaultActive() ? 'active' : 'inactive',
     authMode: getAuthMode(),
     timestamp: new Date().toISOString()

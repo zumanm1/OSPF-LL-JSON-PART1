@@ -449,4 +449,19 @@ export const cleanExpiredSessions = () => {
 // Clean expired sessions every hour
 setInterval(cleanExpiredSessions, 3600000);
 
+// ============================================================================
+// DATABASE HEALTH CHECK
+// ============================================================================
+
+export const testDatabaseConnection = () => {
+  try {
+    // Execute a simple query to verify database is accessible
+    const result = db.prepare('SELECT 1 as test').get();
+    return result && result.test === 1;
+  } catch (error) {
+    console.error('[DB] Database connection test failed:', error.message);
+    return false;
+  }
+};
+
 export default db;
