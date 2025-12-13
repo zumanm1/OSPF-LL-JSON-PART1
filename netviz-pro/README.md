@@ -79,6 +79,86 @@ curl http://localhost:9041/api/health | jq .
 }
 ```
 
+---
+
+## 🔐 Standalone Setup with App0 (Auth-Vault)
+
+If you want to run **only App2 (NetViz Pro)** with centralized authentication from App0, follow these steps:
+
+### Prerequisites
+
+- Ubuntu 20.04+ or compatible Linux
+- Node.js v24.x, npm 11.x
+- Java 17+ (for Keycloak)
+
+### Step 1: Clone App0 (Auth-Vault)
+
+```bash
+cd ~
+mkdir -p the-6-apps && cd the-6-apps
+
+# Clone App0 (Auth-Vault)
+git clone https://github.com/zumanm1/auth-vault.git app0-auth-vault
+```
+
+### Step 2: Start App0 Services (Keycloak + Vault)
+
+```bash
+cd ~/the-6-apps/app0-auth-vault
+./auth-vault.sh install   # First time only
+./auth-vault.sh start
+```
+
+**Verify App0 is running:**
+```bash
+curl http://localhost:9120/health/ready  # Keycloak
+curl http://localhost:9121/v1/sys/health # Vault
+```
+
+### Step 3: Clone and Start App2 (NetViz Pro)
+
+```bash
+cd ~/the-6-apps
+
+# Clone App2
+git clone https://github.com/zumanm1/OSPF-LL-JSON-PART1.git app2-netviz-pro
+cd app2-netviz-pro/netviz-pro
+
+# Install and start
+./netviz.sh install
+./netviz.sh deps
+./netviz.sh start
+```
+
+### Step 4: Verify Both Apps Running
+
+| Service | Port | URL | Health Check |
+|---------|------|-----|--------------|
+| Keycloak (App0) | 9120 | http://localhost:9120/admin | `curl localhost:9120/health/ready` |
+| Vault (App0) | 9121 | http://localhost:9121/ui | `curl localhost:9121/v1/sys/health` |
+| Gateway (App2) | 9040 | http://localhost:9040 | `curl localhost:9040/api/health` |
+| Auth API (App2) | 9041 | - | Internal |
+| Vite Dev (App2) | 9042 | - | Internal |
+
+### Quick Start (Copy-Paste)
+
+```bash
+# Full standalone setup for App0 + App2
+cd ~ && mkdir -p the-6-apps && cd the-6-apps
+git clone https://github.com/zumanm1/auth-vault.git app0-auth-vault
+git clone https://github.com/zumanm1/OSPF-LL-JSON-PART1.git app2-netviz-pro
+
+# Start App0
+cd app0-auth-vault && ./auth-vault.sh install && ./auth-vault.sh start
+cd ..
+
+# Start App2
+cd app2-netviz-pro/netviz-pro
+./netviz.sh install && ./netviz.sh deps && ./netviz.sh start
+```
+
+---
+
 ## 📜 Available Scripts
 
 ### Setup Commands
